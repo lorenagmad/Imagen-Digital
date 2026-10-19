@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Píxel & Pimienta: el becario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E6ECF1; --card:#FFFFFF; --ink:#1B2440; --muted:#5A6482;
+  --r:#E5484D; --g:#2FA36B; --b:#3A6FF2; --note:#FFD23F; --line:#C9D3DD;
+  --ok-bg:#E2F5EB; --ko-bg:#FCE6E7;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141A2C; --card:#1E2640; --ink:#EEF1F8; --muted:#A3ACC6;
+    --r:#FF6B70; --g:#45C489; --b:#6E95FF; --note:#FFD23F; --line:#33405F;
+    --ok-bg:#183A2B; --ko-bg:#45202A;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141A2C; --card:#1E2640; --ink:#EEF1F8; --muted:#A3ACC6;
+  --r:#FF6B70; --g:#45C489; --b:#6E95FF; --note:#FFD23F; --line:#33405F;
+  --ok-bg:#183A2B; --ko-bg:#45202A;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:border-box}
+body{
+  margin:0;min-height:100%;background:var(--paper);color:var(--ink);
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:17px;line-height:1.5;
+  background-image:
+    linear-gradient(var(--line) 1px,transparent 1px),
+    linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:24px 24px;background-attachment:fixed;
+}
+h1,h2,h3,.disp{font-family:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;line-height:1.1;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+.wrap{max-width:720px;margin:0 auto;padding:16px}
+.hidden{display:none!important}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--card);border-bottom:2px solid var(--ink)}
+.bar .wrap{display:flex;align-items:center;gap:12px;padding:10px 16px;flex-wrap:wrap}
+.bar .floor{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:18px;flex:1;min-width:140px}
+.stat{font-weight:700;white-space:nowrap}
+.btn-s{border:2px solid var(--ink);background:var(--card);border-radius:6px;padding:4px 10px;font-size:15px;font-weight:700}
+
+/* title */
+#title .wrap{text-align:center;padding-top:40px}
+#logo{width:100%;max-width:640px;height:auto;image-rendering:pixelated;display:block;margin:0 auto}
+.subtitle{font-size:20px;max-width:30em;margin:18px auto 28px;color:var(--muted)}
+.btn{display:inline-block;border:2px solid var(--ink);background:var(--note);color:#1B2440;font-weight:700;font-size:18px;padding:12px 22px;border-radius:8px;box-shadow:4px 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+.btn.sec{background:var(--card);color:var(--ink)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+
+/* characters */
+.chars{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:20px}
+.char{background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:16px;text-align:left;display:flex;flex-direction:column;gap:6px}
+.char[aria-pressed="true"]{box-shadow:6px 6px 0 var(--b);transform:translate(-2px,-2px)}
+.char svg{width:84px;height:84px}
+.char h3{font-size:24px}
+.char .tag{color:var(--muted);font-size:15px}
+.perk{background:var(--note);color:#1B2440;border-radius:4px;padding:4px 8px;font-size:14px;font-weight:700;align-self:flex-start}
+
+/* building */
+.building{margin-top:18px;border:2px solid var(--ink);border-radius:10px 10px 0 0;background:var(--card);overflow:hidden}
+.flr{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:0;border-top:2px solid var(--ink);background:transparent;padding:14px 16px}
+.flr:first-child{border-top:0}
+.flr .num{flex:0 0 46px;height:46px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:20px;background:var(--paper)}
+.flr.done .num{background:var(--g);color:#fff}
+.flr.open .num{background:var(--note);color:#1B2440}
+.flr .t{flex:1}
+.flr .t b{display:block;font-family:"Bricolage Grotesque",sans-serif;font-size:19px}
+.flr .t span{color:var(--muted);font-size:15px}
+.flr[disabled]{opacity:.5;cursor:not-allowed}
+.stars{font-size:18px;letter-spacing:2px;white-space:nowrap}
+.ground{height:14px;background:var(--ink);border-radius:0 0 4px 4px}
+
+/* dialog */
+.dlg{display:flex;gap:12px;align-items:flex-start;margin:16px 0}
+.dlg svg{flex:0 0 64px;width:64px;height:64px}
+.bubble{background:var(--card);border:2px solid var(--ink);border-radius:4px 14px 14px 14px;padding:12px 14px;flex:1}
+.bubble .who{font-weight:700;font-size:14px;color:var(--muted);display:block}
+.dlg.me{flex-direction:row-reverse}
+.dlg.me .bubble{border-radius:14px 4px 14px 14px;background:var(--note);color:#1B2440}
+.dlg.me .bubble .who{color:#5a4a00}
+
+/* challenge */
+.task{background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:18px;margin-top:16px;box-shadow:6px 6px 0 var(--ink)}
+.task h2{font-size:22px;margin-bottom:8px}
+.task .q{font-size:18px;margin:10px 0 14px}
+.prog{display:flex;gap:6px;margin-bottom:12px}
+.prog i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.prog i.on{background:var(--b)}
+.prog i.ok{background:var(--g)}
+.formula{background:var(--paper);border-left:4px solid var(--b);padding:8px 12px;margin:10px 0;font-weight:700}
+.ans{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ans input{font:inherit;font-size:22px;font-weight:700;width:min(260px,100%);padding:10px 12px;border:2px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink)}
+.unit{font-weight:700;font-size:20px}
+.opts{display:grid;gap:10px}
+.opt{border:2px solid var(--ink);background:var(--paper);border-radius:8px;padding:12px 14px;text-align:left;font-size:17px}
+.opt[aria-pressed="true"]{background:var(--note);color:#1B2440}
+.opt.sw{display:flex;align-items:center;gap:12px}
+.chip{width:40px;height:40px;border:2px solid var(--ink);border-radius:6px;flex:0 0 40px}
+.swgrid{grid-template-columns:repeat(2,1fr)}
+.fb{margin-top:14px;border-radius:8px;padding:12px 14px;border:2px solid var(--ink)}
+.fb.ok{background:var(--ok-bg)} .fb.ko{background:var(--ko-bg)} .fb.info{background:var(--paper)}
+.fb ol{margin:6px 0 0;padding-left:22px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+
+/* bits */
+.bits{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0}
+.bit{display:flex;flex-direction:column;align-items:center;gap:4px}
+.bit button{width:46px;height:56px;border:2px solid var(--ink);border-radius:6px;background:var(--paper);font-family:"Bricolage Grotesque",sans-serif;font-size:28px;font-weight:800}
+.bit button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.bit small{font-size:13px;color:var(--muted);font-weight:700}
+.sum{text-align:center;font-size:20px;font-weight:700;margin-top:6px}
+
+/* mixer */
+.mixer{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0}
+.mixer label{display:flex;flex-direction:column;font-weight:700;gap:4px}
+.mixer select{font:inherit;font-size:20px;padding:8px;border:2px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink)}
+.preview{display:flex;gap:12px;align-items:center;margin-top:8px}
+.preview .chip{width:80px;height:80px;flex-basis:80px}
+.hexcode{font-family:"Bricolage Grotesque",sans-serif;font-size:28px;font-weight:800}
+
+/* depth */
+#depthCanvas{width:100%;height:70px;border:2px solid var(--ink);border-radius:6px;image-rendering:pixelated;display:block}
+.slider{width:100%;margin:14px 0 4px;accent-color:var(--b)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,14,30,.6);display:grid;place-items:center;padding:16px;z-index:20}
+.sheet{background:var(--card);color:var(--ink);border:2px solid var(--ink);border-radius:12px;max-width:640px;width:100%;max-height:85vh;overflow:auto;padding:20px}
+.sheet h2{font-size:26px;margin-bottom:10px}
+.sheet h3{font-size:19px;margin:16px 0 6px}
+.sheet table{border-collapse:collapse;width:100%;font-size:15px}
+.sheet td,.sheet th{border:1px solid var(--line);padding:4px 6px;text-align:center}
+.tblwrap{overflow-x:auto}
+.big{font-size:44px;font-family:"Bricolage Grotesque",sans-serif;font-weight:800}
+.end-art{font-size:64px;text-align:center}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:480px){body{font-size:16px}.task{padding:14px;box-shadow:4px 4px 0 var(--ink)}.bit button{width:38px;height:50px;font-size:24px}}
+</style>
+</head>
+<body>
+
+<!-- TITLE -->
+<section id="title">
+  <div class="wrap">
+    <canvas id="logo" width="640" height="200" aria-label="Píxel y Pimienta"></canvas>
+    <p class="subtitle">Primer día como becario en la agencia de publicidad más caótica de la ciudad. Siete plantas, un jefe imposible y un cliente de leche con muchas exigencias.</p>
+    <div class="row">
+      <button class="btn" id="startBtn">Empezar a trabajar</button>
+      <button class="btn sec" id="cheatBtn0">Ver la chuleta</button>
+    </div>
+  </div>
+</section>
+
+<!-- CHARACTER -->
+<section id="chars" class="hidden">
+  <div class="wrap">
+    <h1 style="font-size:34px;margin-top:20px">Elige a tu becario</h1>
+    <p style="color:var(--muted)">Cada uno tiene una ventaja diferente. Puedes cambiarlo más tarde desde el edificio.</p>
+    <div class="chars" id="charList"></div>
+    <div class="row" style="justify-content:flex-start;margin-top:22px"><button class="btn" id="charOk" disabled>Entrar en la agencia</button></div>
+  </div>
+</section>
+
+<!-- BUILDING -->
+<section id="building" class="hidden">
+  <div class="wrap">
+    <div class="dlg" id="bHead"></div>
+    <div class="building" id="floors"></div>
+    <div class="ground"></div>
+    <div class="row" style="justify-content:flex-start;margin-top:18px">
+      <button class="btn sec" id="cheatBtn1">Ver la chuleta</button>
+      <button class="btn sec" id="changeChar">Cambiar becario</button>
+      <button class="btn sec" id="resetBtn">Borrar progreso</button>
+    </div>
+    <p id="totalScore" style="margin-top:14px;font-weight:700"></p>
+  </div>
+</section>
+
+<!-- LEVEL -->
+<section id="level" class="hidden">
+  <div class="bar"><div class="wrap">
+    <span class="floor" id="lvTitle"></span>
+    <span class="stat" id="lvLives" aria-label="Cafés"></span>
+    <span class="stat" id="lvScore"></span>
+    <button class="btn-s" id="cheatBtn2">Chuleta</button>
+    <button class="btn-s" id="exitBtn">Salir</button>
+  </div></div>
+  <div class="wrap" id="stage"></div>
+</section>
+
+<div class="modal hidden" id="modal" role="dialog" aria-modal="true"><div class="sheet" id="sheet"></div></div>
+
+<script>
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const fmt = (n, d=2) => Number(n).toLocaleString('es-ES',{maximumFractionDigits:d});
+const MB = 1024*1024*8;
+const store = {
+  get(k,def){try{const v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+function show(id){['title','chars','building','level'].forEach(s=>$('#'+s).classList.toggle('hidden',s!==id));window.scrollTo(0,0)}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+
+/* Acepta "16.777.216", "37,5", "37'5", "20.02", "2 097 152" */
+function parseCandidates(str){
+  let s=String(str).trim().replace(/\s/g,'').replace(/[a-zA-Z²]/g,'').replace(/'/g,',');
+  if(!s) return [];
+  const c=new Set();
+  const a=s.replace(/\./g,'').replace(',', '.');  // español
+  const b=s.replace(/,/g,'');                     // inglés
+  [a,b].forEach(x=>{const n=parseFloat(x);if(!isNaN(n)&&/^-?[\d.]+$/.test(x))c.add(n)});
+  return [...c];
+}
+
+/* ---------- avatares SVG originales ---------- */
+function avatar(p){
+  const hair={
+    short:`<path d="M14 30c0-12 8-20 18-20s18 8 18 20c-4-6-10-9-18-9s-14 3-18 9z" fill="${p.hair}"/>`,
+    long:`<path d="M12 34c0-14 8-24 20-24s20 10 20 24v18h-6V30c-4-5-9-7-14-7s-10 2-14 7v22h-6z" fill="${p.hair}"/>`,
+    bun:`<circle cx="32" cy="9" r="7" fill="${p.hair}"/><path d="M14 30c0-12 8-19 18-19s18 7 18 19c-5-5-11-7-18-7s-13 2-18 7z" fill="${p.hair}"/>`,
+    bald:`<path d="M15 28c1-3 3-5 5-6M49 28c-1-3-3-5-5-6" stroke="${p.hair}" stroke-width="4" stroke-linecap="round" fill="none"/>`,
+    cap:`<path d="M13 28c0-11 9-18 19-18s19 7 19 18z" fill="${p.hair}"/><rect x="30" y="25" width="26" height="5" rx="2" fill="${p.hair}"/>`,
+    beanie:`<path d="M14 29c0-12 8-20 18-20s18 8 18 20z" fill="${p.hair}"/><rect x="13" y="25" width="38" height="6" rx="3" fill="${p.hair}" opacity=".75"/>`,
+    streak:`<path d="M12 34c0-14 8-24 20-24s20 10 20 24v14h-6V30c-4-5-9-7-14-7s-10 2-14 7v18h-6z" fill="${p.hair}"/><path d="M22 13c4 3 6 8 6 12" stroke="#E8E8E8" stroke-width="3" fill="none"/>`
+  }[p.style];
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">
+    <rect x="1" y="1" width="62" height="62" rx="12" fill="${p.bg}" stroke="currentColor" stroke-width="2"/>
+    <path d="M10 64c2-12 11-17 22-17s20 5 22 17z" fill="${p.shirt}"/>
+    <circle cx="32" cy="31" r="15" fill="${p.skin}"/>
+    ${hair}
+    <circle cx="26" cy="31" r="1.8" fill="#1B2440"/><circle cx="38" cy="31" r="1.8" fill="#1B2440"/>
+    ${p.glasses?`<g fill="none" stroke="#1B2440" stroke-width="1.6"><circle cx="26" cy="31" r="4.5"/><circle cx="38" cy="31" r="4.5"/><path d="M30.5 31h3"/></g>`:''}
+    ${p.mustache?`<path d="M25 38c3-2 5-2 7 0 2-2 4-2 7 0-3 2-5 1-7 0-2 1-4 2-7 0z" fill="${p.hair==='#E9E4DA'?'#8A8577':p.hair}"/>`:''}
+    ${p.beard?`<path d="M18 33c1 9 7 14 14 14s13-5 14-14c-3 4-8 6-14 6s-11-2-14-6z" fill="${p.hair}"/>`:''}
+    <path d="M28 40c2 1.5 6 1.5 8 0" stroke="#1B2440" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+const CHARS=[
+  {id:'lucia',name:'Lucía',tag:'Perfeccionista. Ha medido los píxeles de su fondo de pantalla.',perk:'Una pista gratis en cada planta',
+   av:{bg:'#CFE0FF',skin:'#F1C9A5',hair:'#3B2A20',style:'long',shirt:'#3A6FF2',glasses:true},
+   ok:['Exacto hasta el último bit.','Lo he comprobado dos veces. Y una tercera por si acaso.','Esto merece un post-it de color verde.'],
+   ko:['Imposible. Voy a revisar mis cálculos con lupa.','Un error. Lo apunto en mi lista de errores.','Respira, Lucía. Respira.']},
+  {id:'dani',name:'Dani',tag:'Lo deja todo para el último minuto, pero llega. Casi siempre.',perk:'Empieza cada planta con 4 cafés',
+   av:{bg:'#FFE3A3',skin:'#C98E64',hair:'#E5484D',style:'cap',shirt:'#2FA36B'},
+   ok:['¡Ni he tenido que pensarlo! Bueno, un poco.','Entregado a tiempo. Récord personal.','Esto lo subo a mis stories.'],
+   ko:['Vale, eso no era. Otro café, por favor.','Juraría que eso era la respuesta en mi cabeza.','Plan B: hacerlo bien.']},
+  {id:'marta',name:'Marta',tag:'Veinte años en publicidad. Ya lo ha visto todo, incluido un cartel en 1 bit.',perk:'Ve la fórmula de cada reto',
+   av:{bg:'#D7F0E2',skin:'#E8B892',hair:'#5B4636',style:'streak',shirt:'#1B2440'},
+   ok:['Como en el 2004, pero con más píxeles.','Ni me despeino.','Apúntalo, becario. Bueno, la becaria soy yo.'],
+   ko:['Hasta los mejores se equivocan. Pocas veces.','Eso me pasa por fiarme del redondeo.','Vale. Esta vez con calma.']}
+];
+const NPC={
+  ramon:{name:'Don Ramón, el jefe',av:{bg:'#FCE6E7',skin:'#F0C29C',hair:'#E9E4DA',style:'bald',shirt:'#5A6482',mustache:true}},
+  paco:{name:'Paco, de informática',av:{bg:'#E2E6EE',skin:'#D9A47C',hair:'#2B2B2B',style:'short',shirt:'#5A6482',beard:true,glasses:true}},
+  brenda:{name:'Brenda, directora de arte',av:{bg:'#F6DDF3',skin:'#8D5B3E',hair:'#1B1B1B',style:'bun',shirt:'#E5484D'}},
+  iker:{name:'Iker, fotógrafo',av:{bg:'#E4E9D2',skin:'#F3CFAF',hair:'#2FA36B',style:'beanie',shirt:'#3B2A20'}},
+  kevin:{name:'Kevin, community manager',av:{bg:'#FFF2C2',skin:'#F1C9A5',hair:'#D9A441',style:'short',shirt:'#3A6FF2'}},
+  vaca:{name:'Sra. Mugidez, cliente (Lácteos La Vaca Feliz)',av:{bg:'#FFFFFF',skin:'#F3D7BD',hair:'#8C8C8C',style:'bun',shirt:'#FFD23F',glasses:true}}
+};
+
+/* ---------- contenido de las plantas ---------- */
+const FLOORS=[
+ {title:'Recepción',sub:'Binario: el idioma de las máquinas',
+  intro:[['ramon','¡Bienvenido a Píxel & Pimienta! Aquí todo funciona con ceros y unos. Sobre todo con ceros, que es lo que cobra el becario.'],
+         ['paco','Te explico rápido: el ordenador solo distingue dos estados, hay corriente o no hay. Por eso usa el sistema binario, base 2. Cada posición vale 2 elevado a su posición: 1, 2, 4, 8, 16…'],
+         ['me','Vale… ¿y la contraseña del wifi?'],
+         ['paco','Primero demuestra que hablas binario.']],
+  tasks:[
+   {type:'bits',n:5,target:19,title:'La taquilla de Paco',q:'La taquilla de Paco se abre con el número 19 en binario. Pulsa los bits para encenderlos (1) o apagarlos (0).',
+    formula:'Valor = suma de 2^posición de cada bit encendido',hint:'Busca el valor posicional más grande que quepa en 19: 16. Te sobran 3. ¿Qué valores suman 3?',
+    sol:['Valores posicionales: 16 · 8 · 4 · 2 · 1','19 = 16 + 2 + 1','Resultado: 10011']},
+   {type:'num',answer:22,unit:'',title:'Un número en el monitor',q:'En el monitor de recepción pone 10110. ¿Qué número es en decimal?',
+    formula:'Decimal = Σ (bit × 2^posición)',hint:'Escribe debajo de cada bit su valor: 16, 8, 4, 2, 1. Suma solo donde hay un 1.',
+    sol:['1×16 + 0×8 + 1×4 + 1×2 + 0×1','16 + 4 + 2 = 22']},
+   {type:'bits',n:8,target:200,title:'La planta del ascensor',q:'El ascensor es de los antiguos: hay que marcar 200 en un byte (8 bits) para que arranque.',
+    formula:'Valor = suma de 2^posición de cada bit encendido',hint:'128 cabe en 200. Te quedan 72. ¿Cabe 64?',
+    sol:['200 − 128 = 72','72 − 64 = 8','200 = 128 + 64 + 8 → 11001000']},
+   {type:'num',answer:128,unit:'caracteres',title:'El viejo código ASCII',q:'La letra W en ASCII se escribe 1010111, con 7 bits. ¿Cuántos caracteres distintos se pueden representar en ASCII?',
+    formula:'Nº de combinaciones = 2^nº de bits',hint:'Cuenta los bits de 1010111 y eleva 2 a ese número.',
+    sol:['1010111 tiene 7 bits','2^7 = 128 caracteres']},
+   {type:'num',answer:69,unit:'',title:'El post-it del jefe',q:'Don Ramón ha dejado un post-it misterioso: 01000101. ¿Qué número decimal es? (Pista: en ASCII, ese número es una letra).',
+    formula:'Decimal = Σ (bit × 2^posición)',hint:'Los bits encendidos están en las posiciones 6, 2 y 0.',
+    sol:['64 + 4 + 1 = 69','En ASCII el 69 es la letra E']}
+  ],
+  outro:[['paco','El post-it completo era 01001100 01000101 01000011 01001000 01000101. Es decir: L-E-C-H-E.'],
+         ['ramon','¡Mi lista de la compra! Bueno, y nuestro nuevo cliente. Sube a Arte.']]},
+
+ {title:'Departamento de Arte',sub:'Hexadecimal y códigos de color',
+  intro:[['brenda','Hola. Soy Brenda. Aquí los colores no se dicen, se escriben en hexadecimal: #RRGGBB.'],
+         ['brenda','Base 16: del 0 al 9 y luego A=10, B=11, C=12, D=13, E=14 y F=15. Cada pareja es un byte: rojo, verde y azul.'],
+         ['vaca','Quiero que mi leche se vea más blanca que la nieve, más amarilla que el sol y más naranja que… bueno, naranja.'],
+         ['brenda','Clásico. Vamos a ello.']],
+  tasks:[
+   {type:'num',answer:163,unit:'',title:'Traduce el byte',q:'El rojo del logo antiguo era A3. ¿Qué valor decimal tiene A3?',
+    formula:'Decimal = símbolo × 16^posición + …',hint:'A vale 10 y está en la posición 1 (vale 16). El 3 está en la posición 0.',
+    sol:['A = 10 → 10 × 16 = 160','3 × 1 = 3','160 + 3 = 163']},
+   {type:'num',answer:255,unit:'',title:'A tope',q:'¿Qué valor decimal tiene FF, el máximo que cabe en un byte?',
+    formula:'Decimal = símbolo × 16^posición + …',hint:'F vale 15.',
+    sol:['15 × 16 = 240','15 × 1 = 15','240 + 15 = 255 (= 2^8 − 1)']},
+   {type:'mc',sw:true,title:'El envase',q:'La Sra. Mugidez quiere el envase en #FFFF00. ¿Cuál de estos es?',
+    opts:[['#FFFF00','Este'],['#00FFFF','Este'],['#FF00FF','Este'],['#FF0000','Este']],answer:0,
+    formula:'#RRGGBB → rojo, verde, azul',hint:'Rojo a tope + verde a tope + nada de azul. En luz (RGB), rojo y verde dan…',
+    sol:['FF rojo + FF verde + 00 azul','Rojo + verde en luz = amarillo']},
+   {type:'num',answer:24,unit:'bits',title:'Pregunta trampa de Brenda',q:'¿Cuántos bits ocupa un código de color #RRGGBB?',
+    formula:'1 byte = 8 bits',hint:'Tiene tres parejas de caracteres, y cada pareja es un byte.',
+    sol:['3 bytes (R, G y B)','3 × 8 = 24 bits → True color']},
+   {type:'mix',target:'FF8040',title:'Naranja Vaca Feliz',q:'Construye el color corporativo de la campaña: #FF8040. Elige el valor de cada canal.',
+    formula:'#RRGGBB → rojo, verde, azul',hint:'Copia las parejas en orden: la primera es el rojo, la segunda el verde y la tercera el azul.',
+    sol:['R = FF (255)','G = 80 (128)','B = 40 (64)']}
+  ],
+  outro:[['vaca','¡Naranja! Justo lo que tenía en la cabeza y no sabía explicar.'],
+         ['brenda','Ahora baja al estudio, que Iker está haciendo las fotos del producto.']]},
+
+ {title:'Estudio de fotografía',sub:'Profundidad de color',
+  intro:[['iker','Eh, ¿qué tal? Yo solo trabajo con luz natural y 24 bits. Lo demás es postureo.'],
+         ['iker','La profundidad de color son los bits por píxel. Con n bits, cada píxel puede tener 2^n colores distintos.'],
+         ['me','¿Y si pongo muchos bits?'],
+         ['iker','Más colores, pero el archivo pesa más. Todo en la vida tiene un precio.']],
+  tasks:[
+   {type:'num',answer:16777216,unit:'colores',title:'La foto de la botella',q:'La foto del producto tiene 24 bits de profundidad de color. ¿Cuántos colores distintos puede representar como máximo?',
+    formula:'Colores = 2^n',hint:'Calcula 2^24. Es el famoso True color.',
+    sol:['2^24 = 16.777.216 colores']},
+   {type:'num',answer:16,unit:'grises',title:'Versión artística',q:'Iker hace una versión en escala de grises con 4 bits. ¿Cuántos tonos de gris tiene?',
+    formula:'Colores = 2^n',hint:'2 × 2 × 2 × 2.',
+    sol:['2^4 = 16 grises (del negro al blanco)']},
+   {type:'depth',target:6,need:50,title:'El degradado del cielo',q:'El cielo del anuncio necesita al menos 50 tonos de gris para que el degradado no se vea a escalones. Ajusta la profundidad al mínimo número de bits que lo consigue.',
+    formula:'Colores = 2^n → busca el n más pequeño con 2^n ≥ 50',hint:'2^5 = 32 se queda corto.',
+    sol:['2^5 = 32 < 50 ✗','2^6 = 64 ≥ 50 ✓','Mínimo: 6 bits']},
+   {type:'num',answer:3840,unit:'colores',title:'El filtro de Instagram',q:'Kevin pasa una imagen de 12 bits a 8 bits para un filtro. ¿Cuántos colores ya NO se pueden representar?',
+    formula:'Perdidos = 2^12 − 2^8',hint:'Calcula cuántos colores había antes y cuántos quedan, y réstalos.',
+    sol:['2^12 = 4.096 colores','2^8 = 256 colores','4.096 − 256 = 3.840 colores perdidos']},
+   {type:'mc',title:'HiColor',q:'En el modo HiColor de 16 bits, un canal recibe 6 bits y los otros dos, 5. ¿Cuál se lleva los 6?',
+    opts:[['r','El rojo'],['g','El verde'],['b','El azul'],['x','Se sortea cada vez']],answer:1,
+    formula:'16 bits = 5 rojo + 6 verde + 5 azul',hint:'Tiene que ver con el ojo humano.',
+    sol:['El verde: el ojo humano es más sensible al verde,','así que se le da un bit más para distinguir más tonos.']},
+   {type:'mc',title:'Los 32 bits',q:'Iker guarda el logo en 32 bits. ¿Para qué sirven los 8 bits extra respecto a 24?',
+    opts:[['a','Para representar transparencias'],['b','Para que se vea más grande'],['c','Para imprimir en CMYK'],['d','Para que pese menos']],answer:0,
+    formula:'32 bits = 24 bits de color + 8 de transparencia',hint:'Piensa en un logo que se pone encima de una foto.',
+    sol:['24 bits de color (8 R + 8 G + 8 B)','+ 8 bits de canal alfa = transparencia']}
+  ],
+  outro:[['iker','Nada mal. Ya puedes decir "profundidad de color" en una cena y quedar de experto.'],
+         ['ramon','¡Becario! Kevin te necesita en Redes. Algo de que "la foto no sube".']]},
+
+ {title:'Redes sociales',sub:'El peso de una imagen',
+  intro:[['kevin','¡Holi! La foto pesa tanto que Instagram me ha dejado en visto.'],
+         ['kevin','Marta me dijo que el peso sin comprimir se calcula así: ancho × alto × profundidad de color = tamaño en bits.'],
+         ['kevin','Y luego se sube por la escalera: bits ÷ 8 = bytes, ÷ 1024 = KB, ÷ 1024 = MB, ÷ 1024 = GB.'],
+         ['me','¿Y para bajar?'],
+         ['kevin','Multiplicas. Fácil, ¿no? Yo tampoco me lo creo.']],
+  tasks:[
+   {type:'num',answer:37.5,unit:'KB',title:'La miniatura',q:'La miniatura del producto es de 320 × 240 píxeles con 4 bits de profundidad. ¿Cuánto pesa en KB?',
+    formula:'Ancho × Alto × Prof. = bits → ÷8 → bytes → ÷1024 → KB',hint:'Primero bits: 320 × 240 × 4. Luego divide entre 8 y entre 1024.',
+    sol:['320 × 240 × 4 = 307.200 bits','307.200 ÷ 8 = 38.400 bytes','38.400 ÷ 1024 = 37,5 KB']},
+   {type:'num',answer:18,unit:'MB',title:'La foto original',q:'Kevin quiere subir la foto original: 2048 × 3072 píxeles a 24 bits. ¿Cuántos MB pesa?',
+    formula:'Ancho × Alto × Prof. = bits → ÷8 ÷1024 ÷1024 → MB',hint:'Son 150.994.944 bits. Sigue bajando… perdón, subiendo por la escalera.',
+    sol:['2048 × 3072 × 24 = 150.994.944 bits','÷ 8 = 18.874.368 bytes','÷ 1024 = 18.432 KB','÷ 1024 = 18 MB']},
+   {type:'mc',title:'¿Es buena idea?',q:'¿Es adecuado poner una imagen de 18 MB en la web del cliente?',
+    opts:[['a','Sí, cuanto más pese, más calidad y mejor'],['b','No: tardará mucho en cargar; hay que reducir dimensiones, profundidad o comprimir'],['c','Da igual, internet es infinito']],answer:1,
+    formula:'Menos peso → carga más rápida',hint:'Piensa en alguien abriendo la web con el móvil en el metro.',
+    sol:['18 MB es muchísimo para una web.','Se reduce bajando dimensiones de píxel, profundidad de color o comprimiendo (JPG, PNG, WebP…).']},
+   {type:'num',answer:1080*1080*24*6/MB,tol:0.01,unit:'MB',title:'El carrusel',q:'Para el feed se publican 6 imágenes cuadradas de 1080 × 1080 a 24 bits. ¿Cuántos MB ocupan en total? (Redondea a dos decimales).',
+    formula:'(Ancho × Alto × Prof.) × nº imágenes → MB',hint:'Calcula una imagen en MB y multiplica por 6. Una sola son unos 3,34 MB.',
+    sol:['1080 × 1080 × 24 = 27.993.600 bits por imagen','× 6 = 167.961.600 bits','÷ 8 ÷ 1024 ÷ 1024 ≈ 20,02 MB']}
+  ],
+  outro:[['kevin','¡20 MB! Ahora entiendo por qué mi móvil echaba humo.'],
+         ['paco','Becario, sube al servidor. Tenemos un problema de espacio. Y no, no es mi mesa.']]},
+
+ {title:'Sala del servidor',sub:'Cuando el espacio es limitado',
+  intro:[['paco','Este servidor es de la época en que Don Ramón tenía pelo. Hay muy poco espacio.'],
+         ['paco','Ahora el cálculo es al revés: sabes cuánto espacio hay y tienes que averiguar cuántas imágenes caben, o qué ancho o profundidad puedes usar.'],
+         ['paco','Truco: pásalo todo a bits y despeja. Y redondea hacia abajo, que si te pasas, no cabe.']],
+  tasks:[
+   {type:'num',answer:2,unit:'imágenes',title:'La landing de la leche',q:'Hay 2 MB para la landing. El texto ocupa 0,4 MB. Cada imagen es de 500 × 400 a 24 bits. ¿Cuántas imágenes caben como máximo?',
+    formula:'Nº imágenes = espacio libre ÷ peso de 1 imagen (hacia abajo)',hint:'Espacio libre: 2 − 0,4 = 1,6 MB. Una imagen pesa unos 0,57 MB.',
+    sol:['Espacio libre: 2 − 0,4 = 1,6 MB','500 × 400 × 24 = 4.800.000 bits ≈ 0,572 MB','1,6 ÷ 0,572 ≈ 2,79 → caben 2 imágenes']},
+   {type:'num',answer:21,unit:'bits',title:'La galería',q:'Hay 12 MB para 5 imágenes de 1280 × 720. ¿Cuál es la máxima profundidad de color que se puede usar sin pasarse?',
+    formula:'Prof. = espacio en bits ÷ (ancho × alto × nº imágenes)',hint:'12 MB = 12 × 1024 × 1024 × 8 bits. Divídelo entre los píxeles totales de las 5 imágenes.',
+    sol:['12 MB = 100.663.296 bits','Píxeles: 1280 × 720 × 5 = 4.608.000','100.663.296 ÷ 4.608.000 ≈ 21,84 → 21 bits']},
+   {type:'num',answer:2097152,unit:'colores',title:'¿Y cuántos colores es eso?',q:'Con la profundidad de antes (21 bits), ¿cuántos colores distintos podrán tener las imágenes de la galería?',
+    formula:'Colores = 2^n',hint:'2^20 es algo más de un millón. 2^21 es el doble.',
+    sol:['2^21 = 2.097.152 colores']},
+   {type:'num',answer:655,unit:'px',title:'Banners del súper',q:'Hay 6 MB para 4 banners de 800 píxeles de alto y 24 bits. Todos tienen el mismo ancho. ¿Cuál es el ancho máximo en píxeles?',
+    formula:'Ancho = espacio en bits ÷ (alto × prof. × nº imágenes)',hint:'6 MB = 50.331.648 bits. El resto: 800 × 24 × 4.',
+    sol:['6 MB = 6 × 1024 × 1024 × 8 = 50.331.648 bits','800 × 24 × 4 = 76.800','50.331.648 ÷ 76.800 ≈ 655,36 → 655 px']}
+  ],
+  outro:[['paco','Cabe todo. Es la primera vez en tres años. Creo que voy a llorar.'],
+         ['ramon','¡Becario! Producción no consigue enviar nada. ¡Suba ya!']]},
+
+ {title:'Producción',sub:'Velocidad de transmisión',
+  intro:[['ramon','La campaña tiene que estar en la imprenta antes de las cinco y esta barra de progreso lleva así desde el lunes.'],
+         ['paco','Ojo: la velocidad de internet va en Mbps, megabits por segundo. Los archivos van en MB, megabytes.'],
+         ['paco','Para pasar de MB a Mb multiplicas por 8. Luego: tiempo = tamaño en Mb ÷ velocidad en Mbps.']],
+  tasks:[
+   {type:'num',answer:12,unit:'segundos',title:'La subida rápida',q:'Hay que subir 6 imágenes de 4 MB cada una con una conexión de 16 Mbps. ¿Cuántos segundos tarda?',
+    formula:'Tiempo (s) = (MB × 8) ÷ Mbps',hint:'Total: 24 MB. Pásalo a megabits.',
+    sol:['6 × 4 = 24 MB','24 × 8 = 192 Mb','192 ÷ 16 = 12 segundos']},
+   {type:'num',answer:40,unit:'segundos',title:'Todos usando la red',q:'Ahora son 50 imágenes de 3 MB. La conexión es de 40 Mbps, pero solo puedes usar el 75 % porque Kevin está viendo vídeos de gatos. ¿Cuántos segundos tarda?',
+    formula:'Tiempo = (MB × 8) ÷ (Mbps × % disponible)',hint:'Velocidad real: 40 × 0,75 = 30 Mbps.',
+    sol:['50 × 3 = 150 MB → × 8 = 1.200 Mb','Velocidad real: 40 × 0,75 = 30 Mbps','1.200 ÷ 30 = 40 segundos']},
+   {type:'num',answer:30.72,tol:0.005,unit:'MB',title:'El límite del correo',q:'El correo de la agencia admite adjuntos de 0,03 GB como máximo. ¿Cuántos MB son?',
+    formula:'GB × 1024 = MB',hint:'Bajar en la escalera es multiplicar.',
+    sol:['0,03 × 1024 = 30,72 MB']},
+   {type:'mc',title:'¿Cabe por correo?',q:'¿Se puede enviar por ese correo un archivo de 25 MB?',
+    opts:[['a','Sí, porque 25 MB es menor que 30,72 MB'],['b','No, porque 0,03 es menor que 25'],['c','Solo si lo envías dos veces']],answer:0,
+    formula:'Compara siempre en la misma unidad',hint:'No compares 0,03 con 25: pasa los dos a MB.',
+    sol:['Límite: 0,03 GB = 30,72 MB','25 MB < 30,72 MB → sí cabe']}
+  ],
+  outro:[['ramon','¡Enviado! Ya sabía yo que contratarle era idea mía.'],
+         ['vaca','Me encanta todo. Ahora quiero un cartel gigante en la Gran Vía. Para mañana.'],
+         ['ramon','Sube a la azotea. Es el gran momento.']]},
+
+ {title:'Azotea',sub:'Reto final: el cartel de la Gran Vía',
+  intro:[['ramon','Este es el encargo definitivo: un cartel A3 para imprimir con tres imágenes. Si sale pixelado, nos vemos en las noticias.'],
+         ['brenda','Las imágenes son: 600 × 800 a 24 bits, 1200 × 900 a 16 bits y 2000 × 2500 a 32 bits.'],
+         ['marta_or_me','Tranquilidad. Es lo mismo de siempre, pero todo junto.']],
+  tasks:[
+   {type:'num',answer:(600*800*24+1200*900*16+2000*2500*32)/MB,tol:0.01,unit:'MB',title:'El peso de las tres imágenes',q:'El cartel lleva tres imágenes:<br>• Imagen 1: 600 × 800 píxeles a 24 bits<br>• Imagen 2: 1200 × 900 píxeles a 16 bits<br>• Imagen 3: 2000 × 2500 píxeles a 32 bits<br>¿Cuántos MB ocupan las tres juntas, sin comprimir? (Redondea a dos decimales).',
+    formula:'Σ (Ancho × Alto × Prof.) → ÷8 ÷1024 ÷1024',hint:'Calcula cada una en bits, súmalas y luego pasa a MB. La grande ya pesa unos 19 MB.',
+    sol:['600 × 800 × 24 = 11.520.000 bits','1200 × 900 × 16 = 17.280.000 bits','2000 × 2500 × 32 = 160.000.000 bits','Total: 188.800.000 bits ÷ 8 ÷ 1024 ÷ 1024 ≈ 22,51 MB']},
+   {type:'mc',title:'¿Al cliente por correo?',q:'Al cartel hay que sumarle 12 MB de texto y vectores. El correo admite 0,03 GB. ¿Se puede enviar sin perder calidad?',
+    opts:[['a','Sí, sobra espacio'],['b','No: 22,51 + 12 = 34,51 MB, y el límite es 30,72 MB'],['c','Sí, si se envía en blanco y negro sin decírselo al cliente']],answer:1,
+    formula:'Compara en la misma unidad: 0,03 GB × 1024 = 30,72 MB',hint:'Suma el total y compáralo con el límite en MB.',
+    sol:['Total: 22,51 + 12 = 34,51 MB','Límite: 0,03 × 1024 = 30,72 MB','34,51 > 30,72 → no cabe: hay que usar otra vía (enlace de descarga, nube…)']},
+   {type:'num',answer:((600*800*24+1200*900*16+2000*2500*32)/MB+12),tol:0.015,unit:'segundos',title:'Plan B: la nube',q:'Lo subes a la nube con una conexión de 8 Mbps. ¿Cuántos segundos tarda en subir el archivo completo de 34,51 MB?',
+    formula:'Tiempo (s) = (MB × 8) ÷ Mbps',hint:'Fíjate: multiplicas por 8 y divides entre 8.',
+    sol:['34,51 × 8 = 276,08 Mb','276,08 ÷ 8 ≈ 34,51 segundos']}
+  ],
+  outro:[['vaca','¡Mi leche en la Gran Vía! Y sin un solo píxel fuera de sitio.'],
+         ['ramon','Becario… quedas ascendido. A becario senior. Sin subida de sueldo, claro.']]}
+];
+
+/* ---------- estado ---------- */
+let save = store.get('pp_save',{char:null,unlocked:1,stars:{},best:{}});
+let run = null;
+function persist(){store.set('pp_save',save)}
+const me = () => CHARS.find(c=>c.id===save.char) || CHARS[0];
+
+/* ---------- logo pixelado ---------- */
+function drawLogo(){
+  const cv=$('#logo'),ctx=cv.getContext('2d');
+  const W=96,H=30,off=document.createElement('canvas');off.width=W;off.height=H;
+  const o=off.getContext('2d');o.fillStyle='#000';o.textBaseline='middle';o.textAlign='center';
+  o.font='bold 13px "Bricolage Grotesque", Arial, sans-serif';o.fillText('PÍXEL &',W/2,8);o.fillText('PIMIENTA',W/2,22);
+  const d=o.getImageData(0,0,W,H).data,cells=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(d[(y*W+x)*4+3]>110)cells.push([x,y])}
+  const s=cv.width/W,cols=['#E5484D','#2FA36B','#3A6FF2'];
+  const ink=getComputedStyle(document.documentElement).getPropertyValue('--ink').trim()||'#1B2440';
+  cv.height=H*s;
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  cells.sort((a,b)=>a[0]-b[0]+(Math.random()-.5)*8);
+  let i=0;
+  function step(){
+    const n=reduce?cells.length:24;
+    for(let k=0;k<n&&i<cells.length;k++,i++){
+      const [x,y]=cells[i];ctx.fillStyle=cols[(x+y)%3];ctx.fillRect(x*s,y*s,s-1,s-1);
+      if(!reduce){setTimeout(()=>{ctx.fillStyle=ink;ctx.fillRect(x*s,y*s,s-1,s-1)},260)}
+      else{ctx.fillStyle=ink;ctx.fillRect(x*s,y*s,s-1,s-1)}
+    }
+    if(i<cells.length)requestAnimationFrame(step);
+  }
+  step();
+}
+
+/* ---------- chuleta ---------- */
+function cheat(){
+  openModal(`<h2>La chuleta del becario</h2>
+  <h3>Binario (base 2)</h3><p>Cada posición vale 2^posición. De derecha a izquierda:</p>
+  <div class="tblwrap"><table><tr><th>Posición</th><td>7</td><td>6</td><td>5</td><td>4</td><td>3</td><td>2</td><td>1</td><td>0</td></tr><tr><th>Valor</th><td>128</td><td>64</td><td>32</td><td>16</td><td>8</td><td>4</td><td>2</td><td>1</td></tr></table></div>
+  <p>Ejemplo: 10011 = 16 + 2 + 1 = 19.</p>
+  <h3>Hexadecimal (base 16)</h3><p>0–9, A=10, B=11, C=12, D=13, E=14, F=15. Cada posición vale 16^posición. Ejemplo: A3 = 10×16 + 3 = 163. Un color es #RRGGBB: tres bytes, 24 bits.</p>
+  <h3>Profundidad de color</h3><p>Bits por píxel. Con n bits: <b>2^n colores</b>. 1 bit = 2 (B/N), 8 bits = 256, 16 bits = 65.536 (HiColor, 5-6-5), 24 bits = 16.777.216 (True color), 32 bits = True color + transparencias.</p>
+  <h3>Peso de una imagen de mapa de bits</h3><p class="formula">Ancho × Alto × Profundidad de color = Tamaño en bits</p>
+  <h3>Unidades</h3><p>1 byte = 8 bits · 1 KB = 1024 bytes · 1 MB = 1024 KB · 1 GB = 1024 MB · 1 TB = 1024 GB.<br>Subir de unidad: dividir. Bajar: multiplicar.</p>
+  <h3>Transmisión</h3><p>Mbps = megabits por segundo. MB × 8 = Mb.<br><b>Tiempo (s) = tamaño en Mb ÷ velocidad en Mbps</b></p>
+  <h3>Escribir respuestas</h3><p>Puedes usar coma o punto para decimales (37,5) y puntos para miles (16.777.216).</p>
+  <div class="actions"><button class="btn" onclick="closeModal()">Volver</button></div>`);
+}
+function openModal(html){$('#sheet').innerHTML=html;$('#modal').classList.remove('hidden');const b=$('#sheet button');if(b)b.focus()}
+function closeModal(){$('#modal').classList.add('hidden')}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+/* ---------- selección de personaje ---------- */
+let tmpChar=save.char;
+function renderChars(){
+  $('#charList').innerHTML=CHARS.map(c=>`<button class="char" data-id="${c.id}" aria-pressed="${tmpChar===c.id}">
+    ${avatar(c.av)}<h3>${c.name}</h3><span class="tag">${c.tag}</span><span class="perk">${c.perk}</span></button>`).join('');
+  document.querySelectorAll('.char').forEach(b=>b.onclick=()=>{tmpChar=b.dataset.id;renderChars();$('#charOk').disabled=false});
+  $('#charOk').disabled=!tmpChar;
+}
+
+/* ---------- edificio ---------- */
+function renderBuilding(){
+  const c=me();
+  const done=Object.keys(save.stars).length;
+  const lines=done===0?`Soy ${c.name}. Primer día. Empiezo por la recepción, que es lo que se hace en los edificios.`
+    :done===FLOORS.length?`¡Campaña terminada! Puedo repetir plantas para conseguir las tres estrellas.`
+    :`Planta ${done+1}, allá voy. Que no se acabe el café.`;
+  $('#bHead').className='dlg';
+  $('#bHead').innerHTML=avatar(c.av)+`<div class="bubble"><span class="who">${c.name}</span>${lines}</div>`;
+  // plantas de arriba (7) a abajo (1)
+  $('#floors').innerHTML=FLOORS.map((f,i)=>{
+    const n=i+1,st=save.stars[n]||0,open=n<=save.unlocked;
+    return `<button class="flr ${st?'done':open?'open':''}" data-f="${i}" ${open?'':'disabled'} aria-label="Planta ${n}: ${f.title}">
+      <span class="num">${n}</span><span class="t"><b>${f.title}</b><span>${f.sub}</span></span>
+      <span class="stars" aria-label="${st} estrellas">${open?'★'.repeat(st)+'☆'.repeat(3-st):'🔒'}</span></button>`;
+  }).reverse().join('');
+  document.querySelectorAll('.flr').forEach(b=>b.onclick=()=>startFloor(+b.dataset.f));
+  const tot=Object.values(save.best).reduce((a,b)=>a+b,0);
+  $('#totalScore').textContent=tot?`Puntos en tu nómina: ${tot.toLocaleString('es-ES')}`:'';
+}
+
+/* ---------- partida ---------- */
+function startFloor(i){
+  const c=me();
+  run={f:i,idx:0,lives:c.id==='dani'?4:3,maxLives:c.id==='dani'?4:3,score:0,freeHint:c.id==='lucia'?1:0,step:0,results:[]};
+  show('level');
+  $('#lvTitle').textContent=`Planta ${i+1} · ${FLOORS[i].title}`;
+  updBar();
+  playDialog(FLOORS[i].intro,()=>renderTask());
+}
+function updBar(){
+  $('#lvLives').textContent='☕'.repeat(run.lives)+'·'.repeat(Math.max(0,run.maxLives-run.lives));
+  $('#lvLives').setAttribute('aria-label',`${run.lives} cafés`);
+  $('#lvScore').textContent=`${run.score} pts`;
+}
+function speaker(key){
+  if(key==='me'||key==='marta_or_me'){const c=me();return {name:c.name,av:c.av,me:true}}
+  return {...NPC[key],me:false};
+}
+function playDialog(lines,done){
+  let k=0;const stage=$('#stage');stage.innerHTML='';
+  const box=document.createElement('div');stage.appendChild(box);
+  const nextBtn=document.createElement('div');nextBtn.className='actions';
+  nextBtn.innerHTML=`<button class="btn" id="dlgNext">Siguiente</button><button class="btn sec" id="dlgSkip">Saltar</button>`;
+  stage.appendChild(nextBtn);
+  function add(){
+    const [who,txt]=lines[k];const s=speaker(who);
+    const d=document.createElement('div');d.className='dlg'+(s.me?' me':'');
+    d.innerHTML=avatar(s.av)+`<div class="bubble"><span class="who">${s.name}</span>${txt}</div>`;
+    box.appendChild(d);k++;
+    if(k>=lines.length){$('#dlgNext').textContent='Empezar';$('#dlgSkip').remove()}
+    d.scrollIntoView({block:'nearest'});
+  }
+  add();
+  $('#dlgNext').onclick=()=>{if(k<lines.length)add();else done()};
+  const sk=$('#dlgSkip');if(sk)sk.onclick=done;
+  $('#dlgNext').focus();
+}
+
+function renderTask(){
+  const fl=FLOORS[run.f],t=fl.tasks[run.idx];
+  run.tries=0;run.hintUsed=false;run.paidHint=false;run.locked=false;
+  const prog=fl.tasks.map((_,j)=>`<i class="${j<run.idx?(run.results[j]?'ok':'on'):''}"></i>`).join('');
+  const marta=me().id==='marta';
+  let body='';
+  if(t.type==='num'){
+    body=`<div class="ans"><input id="ansIn" inputmode="decimal" autocomplete="off" aria-label="Tu respuesta"> <span class="unit">${t.unit}</span></div>`;
+  }else if(t.type==='mc'){
+    body=`<div class="opts ${t.sw?'swgrid':''}">${t.opts.map((o,j)=>t.sw
+      ?`<button class="opt sw" data-j="${j}" aria-pressed="false" aria-label="Opción ${j+1}"><span class="chip" style="background:${o[0]}"></span>Opción ${j+1}</button>`
+      :`<button class="opt" data-j="${j}" aria-pressed="false">${o[1]}</button>`).join('')}</div>`;
+  }else if(t.type==='bits'){
+    body=`<div class="bits">${Array.from({length:t.n},(_,j)=>{const p=t.n-1-j;return `<div class="bit"><button data-v="${2**p}" aria-pressed="false" aria-label="Bit de valor ${2**p}">0</button><small>${2**p}</small></div>`}).join('')}</div><div class="sum" id="bitSum">= 0</div>`;
+  }else if(t.type==='mix'){
+    const vals=['00','40','80','C0','FF'];
+    body=`<div class="mixer">${['R','G','B'].map(ch=>`<label>${ch==='R'?'Rojo':ch==='G'?'Verde':'Azul'}<select data-ch="${ch}">${vals.map(v=>`<option>${v}</option>`).join('')}</select></label>`).join('')}</div>
+      <div class="preview"><span class="chip" id="mixChip"></span><span class="hexcode" id="mixHex">#000000</span></div>`;
+  }else if(t.type==='depth'){
+    body=`<canvas id="depthCanvas" width="256" height="20" aria-hidden="true"></canvas>
+      <input class="slider" type="range" min="1" max="8" value="1" id="depthIn" aria-label="Bits de profundidad">
+      <div class="sum" id="depthTxt"></div>`;
+  }
+  $('#stage').innerHTML=`<div class="task">
+    <div class="prog">${prog}</div>
+    <h2>${t.title}</h2>
+    <p class="q">${t.q}</p>
+    ${marta?`<div class="formula">${t.formula}</div>`:''}
+    ${body}
+    <div id="fb"></div>
+    <div class="actions" id="acts">
+      <button class="btn" id="checkBtn">Comprobar</button>
+      <button class="btn sec" id="hintBtn">${run.freeHint?'Pista (gratis)':'Pista (−30 pts)'}</button>
+    </div></div>`;
+  wireTask(t);
+}
+
+let mcSel=null;
+function wireTask(t){
+  mcSel=null;
+  if(t.type==='num'){const i=$('#ansIn');i.focus();i.addEventListener('keydown',e=>{if(e.key==='Enter')check()})}
+  if(t.type==='mc')document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{if(run.locked)return;mcSel=+b.dataset.j;document.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+  if(t.type==='bits'){
+    const upd=()=>{let s=0;document.querySelectorAll('.bit button').forEach(b=>{if(b.getAttribute('aria-pressed')==='true')s+=+b.dataset.v});$('#bitSum').textContent='= '+s;return s};
+    document.querySelectorAll('.bit button').forEach(b=>b.onclick=()=>{if(run.locked)return;const on=b.getAttribute('aria-pressed')!=='true';b.setAttribute('aria-pressed',on);b.textContent=on?'1':'0';upd()});
+  }
+  if(t.type==='mix'){
+    const upd=()=>{const h=[...document.querySelectorAll('.mixer select')].map(s=>s.value).join('');$('#mixChip').style.background='#'+h;$('#mixHex').textContent='#'+h};
+    document.querySelectorAll('.mixer select').forEach(s=>s.onchange=upd);upd();
+  }
+  if(t.type==='depth'){
+    const cv=$('#depthCanvas'),ctx=cv.getContext('2d'),inp=$('#depthIn');
+    const draw=()=>{const n=+inp.value,lv=2**n;
+      for(let x=0;x<256;x++){const q=Math.min(lv-1,Math.floor(x/256*lv));const g=lv===1?0:Math.round(q/(lv-1)*255);ctx.fillStyle=`rgb(${g},${g},${g})`;ctx.fillRect(x,0,1,20)}
+      $('#depthTxt').textContent=`${n} ${n===1?'bit':'bits'} → 2^${n} = ${lv} tonos`};
+    inp.oninput=draw;draw();
+  }
+  $('#checkBtn').onclick=check;
+  $('#hintBtn').onclick=hint;
+}
+function hint(){
+  const t=FLOORS[run.f].tasks[run.idx];
+  if(run.hintUsed)return;
+  run.hintUsed=true;
+  if(run.freeHint>0){run.freeHint--}else{run.paidHint=true}
+  $('#hintBtn').remove();
+  feedback('info',`<b>Pista:</b> ${t.hint}`);
+}
+function feedback(kind,html){$('#fb').innerHTML=`<div class="fb ${kind}" role="status">${html}</div>`}
+
+function isCorrect(t){
+  if(t.type==='num'){
+    const c=parseCandidates($('#ansIn').value);
+    if(!c.length)return null;
+    return c.some(v=>t.tol?Math.abs(v-t.answer)<=Math.max(t.tol*Math.abs(t.answer),0.01):Math.abs(v-t.answer)<1e-9);
+  }
+  if(t.type==='mc'){if(mcSel===null)return null;return mcSel===t.answer}
+  if(t.type==='bits'){let s=0;document.querySelectorAll('.bit button').forEach(b=>{if(b.getAttribute('aria-pressed')==='true')s+=+b.dataset.v});return s===t.target}
+  if(t.type==='mix'){return [...document.querySelectorAll('.mixer select')].map(s=>s.value).join('')===t.target}
+  if(t.type==='depth'){return +$('#depthIn').value===t.target}
+}
+function solHTML(t){return `<ol>${t.sol.map(s=>`<li>${s}</li>`).join('')}</ol>`}
+
+function check(){
+  if(run.locked)return;
+  const t=FLOORS[run.f].tasks[run.idx];
+  const ok=isCorrect(t);
+  if(ok===null){feedback('info',t.type==='mc'?'Elige una opción antes de comprobar.':'Escribe un número antes de comprobar.');return}
+  const c=me();
+  if(ok){
+    let pts=run.tries===0?100:50;if(run.paidHint)pts-=30;pts=Math.max(pts,10);
+    run.score+=pts;run.results[run.idx]=true;updBar();
+    lockTask(`<b>¡Correcto! +${pts} pts.</b> <i>${c.name}: “${pick(c.ok)}”</i>${solHTML(t)}`,'ok');
+  }else{
+    run.tries++;run.lives--;updBar();
+    if(run.lives<=0){return gameOver()}
+    if(run.tries>=2){
+      run.results[run.idx]=false;
+      lockTask(`<b>Se acabaron los intentos.</b> <i>${c.name}: “${pick(c.ko)}”</i> Así se resolvía:${solHTML(t)}`,'ko');
+    }else{
+      if(!run.hintUsed){run.hintUsed=true;const hb=$('#hintBtn');if(hb)hb.remove()}
+      feedback('ko',`<b>No es correcto. Pierdes un café.</b> <i>${c.name}: “${pick(c.ko)}”</i><br><b>Pista:</b> ${t.hint}<br>Te queda un intento para este reto.`);
+    }
+  }
+}
+function lockTask(html,kind){
+  run.locked=true;
+  feedback(kind,html);
+  const inp=$('#ansIn');if(inp)inp.disabled=true;
+  document.querySelectorAll('.mixer select,#depthIn').forEach(e=>e.disabled=true);
+  const last=run.idx===FLOORS[run.f].tasks.length-1;
+  $('#acts').innerHTML=`<button class="btn" id="nextBtn">${last?'Terminar la planta':'Siguiente reto'}</button>`;
+  $('#nextBtn').focus();
+  $('#nextBtn').onclick=()=>{run.idx++;if(last)playDialog(FLOORS[run.f].outro,finishFloor);else renderTask()};
+}
+function gameOver(){
+  const c=me();
+  openModal(`<div class="end-art">☕</div><h2>Sin café</h2>
+    <p>${c.name} se ha quedado sin cafés y Don Ramón le ha mandado a casa a descansar. Mañana será otro día (o dentro de 5 segundos).</p>
+    <div class="actions"><button class="btn" id="goRetry">Repetir la planta</button><button class="btn sec" id="goOut">Volver al edificio</button></div>`);
+  $('#goRetry').onclick=()=>{closeModal();startFloor(run.f)};
+  $('#goOut').onclick=()=>{closeModal();toBuilding()};
+}
+function finishFloor(){
+  const fl=FLOORS[run.f],n=run.f+1,max=fl.tasks.length*100;
+  const ratio=run.score/max,st=ratio>=.9?3:ratio>=.6?2:1;
+  save.stars[n]=Math.max(save.stars[n]||0,st);
+  save.best[n]=Math.max(save.best[n]||0,run.score);
+  save.unlocked=Math.max(save.unlocked,Math.min(FLOORS.length,n+1));
+  persist();
+  const final=n===FLOORS.length;
+  const tot=Object.values(save.best).reduce((a,b)=>a+b,0),maxTot=FLOORS.reduce((a,f)=>a+f.tasks.length*100,0);
+  const rank=tot/maxTot>=.9?'Director/a creativo/a':tot/maxTot>=.7?'Diseñador/a senior':tot/maxTot>=.45?'Junior prometedor/a':'Becario/a con potencial';
+  openModal(`<div class="end-art" aria-hidden="true">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div>
+    <h2>${final?'¡Campaña terminada!':`Planta ${n} superada`}</h2>
+    <p class="big">${run.score} <span style="font-size:20px">/ ${max} pts</span></p>
+    ${final?`<p>El cartel ya brilla en la Gran Vía. Puntos totales: <b>${tot.toLocaleString('es-ES')}</b> de ${maxTot.toLocaleString('es-ES')}. Rango final: <b>${rank}</b>.</p>`
+      :`<p>${st===3?'Impecable. Don Ramón ha sonreído (dicen que pasa una vez al año).':st===2?'Buen trabajo. Repite la planta si quieres las tres estrellas.':'Superada, pero con sudores. Repítela para mejorar tu nota.'}</p>`}
+    <div class="actions">${!final?`<button class="btn" id="fNext">Subir a la planta ${n+1}</button>`:''}
+    <button class="btn sec" id="fRetry">Repetir</button><button class="btn sec" id="fOut">Volver al edificio</button></div>`);
+  const nx=$('#fNext');if(nx)nx.onclick=()=>{closeModal();startFloor(n)};
+  $('#fRetry').onclick=()=>{closeModal();startFloor(run.f)};
+  $('#fOut').onclick=()=>{closeModal();toBuilding()};
+}
+function toBuilding(){renderBuilding();show('building')}
+
+/* ---------- arranque ---------- */
+$('#startBtn').onclick=()=>{if(save.char)toBuilding();else{renderChars();show('chars')}};
+$('#charOk').onclick=()=>{save.char=tmpChar;persist();toBuilding()};
+$('#changeChar').onclick=()=>{tmpChar=save.char;renderChars();show('chars')};
+$('#resetBtn').onclick=()=>{
+  openModal(`<h2>¿Borrar el progreso?</h2><p>Se perderán las estrellas, los puntos y el personaje elegido.</p>
+  <div class="actions"><button class="btn" id="rYes">Borrar progreso</button><button class="btn sec" onclick="closeModal()">Cancelar</button></div>`);
+  $('#rYes').onclick=()=>{save={char:null,unlocked:1,stars:{},best:{}};persist();tmpChar=null;closeModal();show('title')};
+};
+$('#exitBtn').onclick=()=>{
+  openModal(`<h2>¿Salir de la planta?</h2><p>Perderás el progreso de esta planta.</p>
+  <div class="actions"><button class="btn" id="xYes">Salir</button><button class="btn sec" onclick="closeModal()">Seguir jugando</button></div>`);
+  $('#xYes').onclick=()=>{closeModal();toBuilding()};
+};
+['#cheatBtn0','#cheatBtn1','#cheatBtn2'].forEach(s=>$(s).onclick=cheat);
+$('#startBtn').textContent=save.char?'Seguir trabajando':'Empezar a trabajar';
+(document.fonts?document.fonts.ready:Promise.resolve()).then(drawLogo);
+
+/* ===== Registro de actividad xAPI común (portal, juegos y laboratorio de fórmulas) =====
+   Identidad y registro se guardan en el navegador con claves compartidas: si todas las páginas
+   están publicadas en el mismo sitio (por ejemplo, usuario.github.io), el alumno se identifica una
+   sola vez y un único archivo de registro reúne la actividad de todas. */
+const XA=(()=>{
+  const K_ID='uca_id',K_LOG='uca_xapi',BASE='https://imagendigital.uca.es/xapi';
+  const VERB={launched:'inició',initialized:'empezó',experienced:'visitó',interacted:'usó',attempted:'abrió',answered:'respondió',asked:'pidió una pista en',passed:'superó',failed:'no superó',completed:'completó',suspended:'pausó',resumed:'retomó'};
+  const st={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+  const uuid=()=>(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)}));
+  const anonCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='PF-';for(let i=0;i<6;i++)c+=a[Math.floor(Math.random()*a.length)];return c};
+  let APP={id:'portal',name:'Portal'},ID=st.get(K_ID,null);
+  if(!ID){const old=st.get('pdf_id',null);if(old&&old.email){ID={name:old.name,email:old.email,consent:old.consent,anon:old.anon||anonCode()};st.set(K_ID,ID)}}
+  if(ID&&!ID.anon){ID.anon=anonCode();st.set(K_ID,ID)}
+  const reg=()=>{const k='uca_reg_'+APP.id;let r=st.get(k,null);if(!r){r=uuid();st.set(k,r)}return r};
+  const iri=(kind,id)=>`${BASE}/${APP.id}/${kind}/${encodeURIComponent(id)}`;
+  function log(verb,kind,id,name,result,ext){if(!ID)return;const L=st.get(K_LOG,[]);
+    if(verb==='suspended'&&L.length&&L[L.length-1].verb.id.endsWith('/suspended')&&L[L.length-1].context.platform===APP.name)return;
+    const s={id:uuid(),actor:{objectType:'Agent',name:ID.name,mbox:'mailto:'+ID.email},verb:{id:'http://adlnet.gov/expapi/verbs/'+verb,display:{'es-ES':VERB[verb]||verb}},
+      object:{objectType:'Activity',id:iri(kind,id),definition:{name:{'es-ES':name||String(id)},type:'http://adlnet.gov/expapi/activities/'+({reto:'cmi.interaction',nivel:'module',juego:'simulation',herramienta:'interaction'}[kind]||'interaction')}},
+      timestamp:new Date().toISOString(),
+      context:{registration:reg(),platform:APP.name,language:'es-ES',contextActivities:{grouping:[{objectType:'Activity',id:`${BASE}/${APP.id}`}]},
+        extensions:Object.assign({[BASE+'/ext/codigo-anonimo']:ID.anon,[BASE+'/ext/app']:APP.name},ext||{})}};
+    if(result)s.result=result;L.push(s);st.set(K_LOG,L)}
+  const dur=ms=>'PT'+(Math.max(0,ms)/1000).toFixed(1)+'S';
+  /* ---- ventanas propias (no dependen del estilo de cada página) ---- */
+  const css=`.xa-ov{position:fixed;inset:0;background:rgba(10,12,20,.7);display:grid;place-items:center;padding:12px;z-index:9999}
+  .xa-box{background:#fff;color:#22202A;border-radius:14px;max-width:560px;width:100%;max-height:90vh;overflow:auto;padding:20px;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+  .xa-box h2{margin:0 0 8px;font-size:24px;line-height:1.15}.xa-box p{margin:6px 0}.xa-box label{display:grid;gap:4px;font-weight:700;margin-top:10px}
+  .xa-box input[type=text],.xa-box input[type=email]{font:inherit;font-size:17px;padding:9px 11px;border:2px solid #CFCAD8;border-radius:8px}
+  .xa-box .xa-ck{display:flex;gap:10px;align-items:flex-start;font-weight:400;font-size:14px;color:#55506A}.xa-box .xa-ck input{width:20px;height:20px;margin-top:2px}
+  .xa-err{color:#C8243A;font-weight:700;min-height:1.4em}.xa-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  .xa-btn{font:inherit;font-weight:700;border:2px solid #22202A;background:#E3A92B;color:#22202A;border-radius:8px;padding:8px 14px;cursor:pointer}.xa-btn.sec{background:#fff}
+  @media (prefers-color-scheme: dark){.xa-box{background:#1E2236;color:#F1EEE8}.xa-box input[type=text],.xa-box input[type=email]{background:#15182A;color:#F1EEE8;border-color:#343A55}.xa-box .xa-ck{color:#ABA6B8}.xa-btn.sec{background:#1E2236;color:#F1EEE8;border-color:#F1EEE8}}`;
+  function modal(html){let ov=document.getElementById('xa-ov');if(!document.getElementById('xa-css')){const t=document.createElement('style');t.id='xa-css';t.textContent=css;document.head.appendChild(t)}
+    if(!ov){ov=document.createElement('div');ov.id='xa-ov';ov.className='xa-ov';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');document.body.appendChild(ov)}
+    ov.innerHTML=`<div class="xa-box">${html}</div>`;ov.hidden=false;return ov}
+  const close=()=>{const ov=document.getElementById('xa-ov');if(ov)ov.remove()};
+  function ensureLogin(cb){if(ID){cb&&cb();return}
+    const ov=modal(`<h2>Identifícate</h2><p>Antes de empezar, escribe tu nombre y tu correo de la UCA. Solo se pide una vez.</p>
+      <label>Nombre y apellidos<input type="text" id="xa-n" autocomplete="name"></label>
+      <label>Correo de la UCA<input type="email" id="xa-m" autocomplete="email" placeholder="nombre@alum.uca.es"></label>
+      <label class="xa-ck"><input type="checkbox" id="xa-ok"><span>Acepto que mis acciones (retos, respuestas, tiempos y uso de las herramientas) se guarden en un archivo junto a mi nombre y correo. Ese archivo lo entrego yo al profesorado (por correo o en la tarea del Campus Virtual) para analizar el aprendizaje. Mis datos identificativos no se publicarán: si los resultados se difunden, se usará solo un código anónimo.</span></label>
+      <p class="xa-err" id="xa-e"></p><div class="xa-row"><button class="xa-btn" id="xa-go">Entrar</button><button class="xa-btn sec" id="xa-no">Volver</button></div>`);
+    setTimeout(()=>ov.querySelector('#xa-n').focus(),30);
+    ov.querySelector('#xa-no').onclick=close;
+    ov.querySelector('#xa-go').onclick=()=>{const n=ov.querySelector('#xa-n').value.trim().replace(/\s+/g,' '),m=ov.querySelector('#xa-m').value.trim().toLowerCase(),e=ov.querySelector('#xa-e');
+      if(n.length<3)return e.textContent='Escribe tu nombre y apellidos.';
+      if(!/^[^@\s]+@(alum\.)?uca\.es$/.test(m))return e.textContent='Usa tu correo de la UCA (@uca.es o @alum.uca.es).';
+      if(!ov.querySelector('#xa-ok').checked)return e.textContent='Para continuar tienes que aceptar el registro de actividad.';
+      ID={name:n,email:m,consent:new Date().toISOString(),anon:anonCode()};st.set(K_ID,ID);close();log('launched','juego',APP.id,APP.name);onId.forEach(f=>f(ID));cb&&cb()}}
+  const onId=[];
+  /* ---- descargas ---- */
+  async function saveFile(filename,data){try{const dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;if(dl){await dl.save({filename,data});return true}}catch(e){if(e&&e.code==='declined')return false}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:filename.endsWith('.csv')?'text/csv':'application/json'}));a.download=filename;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);return true}
+  function toCSV(L){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';const E=k=>BASE+'/ext/'+k;
+    const rows=[['codigo_anonimo','app','email','nombre','actividad','verbo','objeto_id','objeto','timestamp','duracion_s','exito','puntos','intento','respuesta','nivel']];
+    for(const s of L){const cx=s.context.extensions||{},r=s.result||{},nm=s.object.definition.name['es-ES'];
+      rows.push([cx[E('codigo-anonimo')],s.context.platform,s.actor.mbox.replace('mailto:',''),s.actor.name,`${s.verb.display['es-ES']} · ${nm}`,s.verb.display['es-ES'],s.object.id,nm,s.timestamp,r.duration?parseFloat(r.duration.slice(2)):'',r.success==null?'':r.success,r.score?r.score.raw:'',cx[E('intento')]||'',r.response||'',cx[E('nivel')]||''])}
+    return '\ufeff'+rows.map(r=>r.map(q).join(';')).join('\n')}
+  function panel(){const L=st.get(K_LOG,[]),apps={};L.forEach(s=>apps[s.context.platform]=(apps[s.context.platform]||0)+1);
+    const tag=(ID?ID.email.split('@')[0]:'sin-identificar')+'_'+new Date().toISOString().slice(0,10);
+    const ov=modal(`<h2>Mi registro de actividad</h2>${ID?`<p><b>${ID.name}</b> · ${ID.email}</p>`:'<p>Todavía no te has identificado.</p>'}
+      <p>Acciones guardadas en este navegador: <b>${L.length}</b>${Object.keys(apps).length?' ('+Object.entries(apps).map(([a,n])=>`${a}: ${n}`).join(' · ')+')':''}.</p>
+      <p style="font-size:14px;opacity:.8">Descarga el archivo y entrégalo a tu profesor/a por correo o en la tarea del Campus Virtual. Se guarda solo en este dispositivo: si usas varios, entrega el de cada uno.</p>
+      <div class="xa-row"><button class="xa-btn" id="xa-j" ${L.length?'':'disabled'}>Descargar registro (xAPI)</button><button class="xa-btn sec" id="xa-c" ${L.length?'':'disabled'}>Descargar CSV</button></div>
+      <div class="xa-row">${ID?'<button class="xa-btn sec" id="xa-x">No soy yo / cambiar de alumno</button>':''}<button class="xa-btn sec" id="xa-b">Cerrar</button></div>`);
+    ov.querySelector('#xa-b').onclick=close;
+    const j=ov.querySelector('#xa-j'),c=ov.querySelector('#xa-c');if(j)j.onclick=()=>saveFile(`imagen-digital_xapi_${tag}.json`,JSON.stringify(L,null,1));if(c)c.onclick=()=>saveFile(`imagen-digital_eventos_${tag}.csv`,toCSV(L));
+    const x=ov.querySelector('#xa-x');if(x)x.onclick=()=>{const ov2=modal(`<h2>¿Cambiar de alumno?</h2><p>Si el registro de <b>${ID.name}</b> no se ha entregado todavía, descárgalo antes: al cambiar de alumno se borra de este navegador.</p><div class="xa-row"><button class="xa-btn" id="xa-y">Cambiar de alumno</button><button class="xa-btn sec" id="xa-n2">Cancelar</button></div>`);
+      ov2.querySelector('#xa-n2').onclick=panel;ov2.querySelector('#xa-y').onclick=()=>{ID=null;st.set(K_ID,null);try{localStorage.removeItem(K_ID);localStorage.removeItem(K_LOG)}catch(e){}close();onId.forEach(f=>f(null))}}}
+  function init(app){APP=app;if(ID)log('launched','juego',APP.id,APP.name);
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)log('suspended','juego',APP.id,APP.name);else log('resumed','juego',APP.id,APP.name)});
+    window.addEventListener('pagehide',()=>log('suspended','juego',APP.id,APP.name))}
+  /* respuesta visible en la ventana del reto, para el registro */
+  function readResponse(root){root=root||document;const out=[];
+    const bits=root.querySelector('.bits');if(bits)return [...bits.querySelectorAll('button')].map(b=>b.getAttribute('aria-pressed')==='true'?'1':'0').join('');
+    const mix=root.querySelector('.mixer');if(mix)return '#'+[...mix.querySelectorAll('select')].map(x=>x.value).join('');
+    root.querySelectorAll('input[type=text],input:not([type]),input[inputmode],input[type=number]').forEach(i=>{if(i.offsetParent!==null&&i.value!=='')out.push(i.value.trim())});
+    root.querySelectorAll('select').forEach(s=>{if(s.offsetParent!==null&&s.value!=='')out.push(s.options[s.selectedIndex].text)});
+    root.querySelectorAll('input[type=range]').forEach(r=>{if(r.offsetParent!==null)out.push((r.getAttribute('aria-label')||r.id)+' '+r.value)});
+    root.querySelectorAll('[aria-pressed="true"]').forEach(b=>{if(b.offsetParent!==null)out.push(b.textContent.trim().replace(/\s+/g,' ').slice(0,60))});
+    return out.join(' | ').slice(0,400)}
+  return {init,log,dur,ensureLogin,panel,readResponse,modal,close,onIdentity:f=>onId.push(f),get id(){return ID},saveFile}
+})();
+
+/* ===== Enganches del registro xAPI en este juego ===== */
+(function(){
+  const H={"app": "pixel-pimienta", "appName": "Píxel & Pimienta", "prefix": "P", "tema": "Tema 1", "ri": "f", "start": "startFloor", "correct": "isCorrect", "hint": "hint", "lock": "lockTask", "finish": "finishFloor","levels":()=>FLOORS};
+  XA.init({id:H.app,name:H.appName});
+  let t0=0,tries=0,score0=0;
+  const lvl=()=>H.levels()[run[H.ri]],task=()=>lvl().tasks[run.idx];
+  const tid=()=>`${H.prefix}${run[H.ri]+1}-${run.idx+1}`;
+  const ext=()=>({[ 'https://imagendigital.uca.es/xapi/ext/nivel']:lvl().title,'https://imagendigital.uca.es/xapi/ext/tema':H.tema,'https://imagendigital.uca.es/xapi/ext/intento':tries});
+  const wrap=(name,fn)=>{const orig=window[name];if(typeof orig!=='function')return;window[name]=function(...a){return fn(orig,a)}};
+  wrap(H.start,(o,a)=>{const r=o(...a);try{XA.log('attempted','nivel',H.prefix+(a[0]+1),H.levels()[a[0]].title)}catch(e){}return r});
+  wrap('renderTask',(o,a)=>{const r=o(...a);try{t0=Date.now();tries=0;score0=run.score;XA.log('attempted','reto',tid(),task().title,null,ext())}catch(e){}return r});
+  wrap(H.correct,(o,a)=>{let resp='';try{resp=XA.readResponse(document.querySelector('.task'))}catch(e){}const ok=o(...a);
+    try{if(ok!==null&&ok!==undefined&&!run.locked){tries++;XA.log('answered','reto',tid(),task().title,{success:!!ok,response:resp,duration:XA.dur(Date.now()-t0)},ext())}}catch(e){}return ok});
+  wrap(H.hint,(o,a)=>{const before=run.hintUsed;const r=o(...a);try{if(!before&&run.hintUsed)XA.log('asked','reto','pista-'+tid(),'Pista de «'+task().title+'»',null,ext())}catch(e){}return r});
+  wrap(H.lock,(o,a)=>{try{const ok=!!run.results[run.idx],pts=run.score-score0;XA.log(ok?'passed':'failed','reto',tid(),task().title,{success:ok,completion:true,score:{raw:pts,min:0,max:100,scaled:pts/100},duration:XA.dur(Date.now()-t0)},ext())}catch(e){}return o(...a)});
+  wrap('gameOver',(o,a)=>{try{XA.log('failed','nivel',H.prefix+(run[H.ri]+1),lvl().title,{success:false,score:{raw:run.score}},{'https://imagendigital.uca.es/xapi/ext/motivo':'sin vidas'})}catch(e){}return o(...a)});
+  wrap(H.finish,(o,a)=>{try{const L=lvl(),max=L.tasks.length*100,n=run[H.ri];XA.log('completed','nivel',H.prefix+(n+1),L.title,{completion:true,success:true,score:{raw:run.score,min:0,max,scaled:+(run.score/max).toFixed(3)}});
+    if(n===H.levels().length-1)XA.log('completed','juego',H.app,H.appName,{completion:true})}catch(e){}return o(...a)});
+  wrap('cheat',(o,a)=>{XA.log('experienced','herramienta','chuleta','Chuleta');return o(...a)});
+  /* identificación antes de empezar y botón «Mi registro» */
+  const sb=document.getElementById('startBtn'),go=sb.onclick;sb.onclick=e=>XA.ensureLogin(()=>go(e));
+  const add=(after,id)=>{const b=document.getElementById(after);if(b)b.insertAdjacentHTML('afterend',`<button class="btn sec" id="${id}">Mi registro</button>`);const nb=document.getElementById(id);if(nb)nb.onclick=()=>XA.panel()};
+  add('cheatBtn0','xaReg0');add('cheatBtn1','xaReg1');
+  /* botón «Salir» en la pantalla de niveles */
+  const r1=document.getElementById('xaReg1');
+  if(r1){r1.insertAdjacentHTML('afterend','<button class="btn sec" id="xaExit">Salir</button>');document.getElementById('xaExit').onclick=()=>{
+    XA.log('suspended','juego',H.app,H.appName,null,{'https://imagendigital.uca.es/xapi/ext/motivo':'salir'});
+    const portal=!window.claude;
+    const ov=XA.modal(`<h2>✔ Progreso guardado</h2><p>Tu progreso en <b>${H.appName}</b> y tu registro de actividad se han guardado <b>en este ordenador y en este navegador</b>. La próxima vez que entres desde aquí, seguirás donde lo has dejado.</p>
+      <p style="font-size:15px;opacity:.85">Si juegas desde otro ordenador o móvil, en otro navegador o en modo incógnito, empezarás de cero. Si usas varios dispositivos, entrega el registro de cada uno (botón «Mi registro»).</p>
+      <div class="xa-row"><button class="xa-btn" id="xa-home">${portal?'Ir a todos los juegos':'Ir a la pantalla de inicio'}</button><button class="xa-btn sec" id="xa-stay">Seguir jugando</button></div>`);
+    ov.querySelector('#xa-stay').onclick=XA.close;
+    ov.querySelector('#xa-home').onclick=()=>{XA.close();if(portal)location.href='../index.html';else{show('title');window.scrollTo(0,0)}}}}
+  if(!window.claude){const t=document.getElementById('startBtn');if(t&&t.parentNode)t.parentNode.insertAdjacentHTML('beforebegin','<p style="margin:0 0 6px"><a href="../index.html" style="color:inherit;font-weight:700">← Todos los juegos</a></p>')}
+})();
+
+</script>
+</body>
+</html>
