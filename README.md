@@ -23,12 +23,6 @@ La página principal (`index.html`) enlaza a los cuatro.
 
 El progreso y el registro se guardan en el navegador del dispositivo. En otro dispositivo, o en modo incógnito, se empieza de cero. Si un alumno usa varios dispositivos, debe entregar el registro de cada uno.
 
-## Publicar en GitHub Pages
-
-1. Sube a la raíz del repositorio el contenido de esta carpeta tal cual, con sus subcarpetas: `index.html`, `README.md`, `.nojekyll`, `pixel-pimienta/`, `graficas-toner/`, `sin-filtro/` y `formulas/`.
-2. En **Settings › Pages**, elige **Deploy from a branch**, rama **main**, carpeta **/ (root)**.
-3. Abre `https://TU-USUARIO.github.io/NOMBRE-DEL-REPOSITORIO/`.
-
 ## Créditos
 
 Diseño didáctico: profesorado de la asignatura (Universidad de Cádiz). Programación generada con la ayuda de Claude (Anthropic).
