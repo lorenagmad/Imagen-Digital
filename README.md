@@ -11,17 +11,20 @@ Tres juegos y un laboratorio de fórmulas para repasar los temas de la asignatur
 
 La página principal (`index.html`) enlaza a los cuatro.
 
-## Registro de actividad (xAPI)
+## Mis partidas: un solo archivo
 
-- La primera vez, el alumno se identifica con su nombre y correo de la UCA y acepta el registro de actividad.
-- Todas las páginas comparten la identificación y el registro, siempre que estén publicadas en el mismo sitio (por ejemplo, en este repositorio de GitHub Pages).
-- Se registran, en formato xAPI: niveles abiertos y completados, retos abiertos, cada respuesta (lo contestado, si es correcta y el tiempo), pistas, retos superados o no, uso de la chuleta y cada cálculo del laboratorio.
-- El alumno descarga su registro con **Mi registro** (en la página principal, en los juegos y en el laboratorio) y lo entrega por correo o en la tarea del Campus Virtual. Un único archivo reúne todo lo hecho desde ese dispositivo.
+- La primera vez, el alumno se identifica con su nombre y correo de la UCA y acepta el registro de actividad. Se hace una sola vez para todas las páginas.
+- Sus partidas y sus acciones (registro xAPI) se guardan en el navegador.
+- En **Mis partidas** (página principal, juegos y laboratorio) descarga **un único archivo** que sirve para dos cosas:
+  - **Entregarlo** al profesorado, por correo o en la tarea del Campus Virtual.
+  - **Seguir en otro ordenador**: allí pulsa **Cargar partidas** y recupera el progreso de los tres juegos y todo su registro.
 - Cada alumno tiene un código anónimo (PF-…) para analizar o publicar resultados sin datos identificativos.
 
-## Guardado
+## Publicar en GitHub Pages
 
-El progreso y el registro se guardan en el navegador del dispositivo. En otro dispositivo, o en modo incógnito, se empieza de cero. Si un alumno usa varios dispositivos, debe entregar el registro de cada uno.
+1. Sube a la raíz del repositorio el contenido de esta carpeta tal cual, con sus subcarpetas: `index.html`, `README.md`, `.nojekyll`, `pixel-pimienta/`, `graficas-toner/`, `sin-filtro/` y `formulas/`.
+2. En **Settings › Pages**, elige **Deploy from a branch**, rama **main**, carpeta **/ (root)**.
+3. Abre `https://TU-USUARIO.github.io/NOMBRE-DEL-REPOSITORIO/`.
 
 ## Créditos
 

@@ -696,7 +696,7 @@ requestAnimationFrame(()=>setTimeout(()=>$('#logo').classList.add('reg'),250));
    sola vez y un único archivo de registro reúne la actividad de todas. */
 const XA=(()=>{
   const K_ID='uca_id',K_LOG='uca_xapi',BASE='https://imagendigital.uca.es/xapi';
-  const VERB={launched:'inició',initialized:'empezó',experienced:'visitó',interacted:'usó',attempted:'abrió',answered:'respondió',asked:'pidió una pista en',passed:'superó',failed:'no superó',completed:'completó',suspended:'pausó',resumed:'retomó'};
+  const VERB={launched:'inició',initialized:'empezó',experienced:'visitó',interacted:'usó',attempted:'abrió',answered:'respondió',asked:'pidió una pista en',passed:'superó',failed:'no superó',completed:'completó',suspended:'pausó',resumed:'retomó',terminated:'reinició'};
   const st={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
   const uuid=()=>(crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)}));
   const anonCode=()=>{const a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='PF-';for(let i=0;i<6;i++)c+=a[Math.floor(Math.random()*a.length)];return c};
@@ -749,17 +749,47 @@ const XA=(()=>{
     for(const s of L){const cx=s.context.extensions||{},r=s.result||{},nm=s.object.definition.name['es-ES'];
       rows.push([cx[E('codigo-anonimo')],s.context.platform,s.actor.mbox.replace('mailto:',''),s.actor.name,`${s.verb.display['es-ES']} · ${nm}`,s.verb.display['es-ES'],s.object.id,nm,s.timestamp,r.duration?parseFloat(r.duration.slice(2)):'',r.success==null?'':r.success,r.score?r.score.raw:'',cx[E('intento')]||'',r.response||'',cx[E('nivel')]||''])}
     return '\ufeff'+rows.map(r=>r.map(q).join(';')).join('\n')}
-  function panel(){const L=st.get(K_LOG,[]),apps={};L.forEach(s=>apps[s.context.platform]=(apps[s.context.platform]||0)+1);
-    const tag=(ID?ID.email.split('@')[0]:'sin-identificar')+'_'+new Date().toISOString().slice(0,10);
-    const ov=modal(`<h2>Mi registro de actividad</h2>${ID?`<p><b>${ID.name}</b> · ${ID.email}</p>`:'<p>Todavía no te has identificado.</p>'}
-      <p>Acciones guardadas en este navegador: <b>${L.length}</b>${Object.keys(apps).length?' ('+Object.entries(apps).map(([a,n])=>`${a}: ${n}`).join(' · ')+')':''}.</p>
-      <p style="font-size:14px;opacity:.8">Descarga el archivo y entrégalo a tu profesor/a por correo o en la tarea del Campus Virtual. Se guarda solo en este dispositivo: si usas varios, entrega el de cada uno.</p>
-      <div class="xa-row"><button class="xa-btn" id="xa-j" ${L.length?'':'disabled'}>Descargar registro (xAPI)</button><button class="xa-btn sec" id="xa-c" ${L.length?'':'disabled'}>Descargar CSV</button></div>
-      <div class="xa-row">${ID?'<button class="xa-btn sec" id="xa-x">No soy yo / cambiar de alumno</button>':''}<button class="xa-btn sec" id="xa-b">Cerrar</button></div>`);
-    ov.querySelector('#xa-b').onclick=close;
-    const j=ov.querySelector('#xa-j'),c=ov.querySelector('#xa-c');if(j)j.onclick=()=>saveFile(`imagen-digital_xapi_${tag}.json`,JSON.stringify(L,null,1));if(c)c.onclick=()=>saveFile(`imagen-digital_eventos_${tag}.csv`,toCSV(L));
-    const x=ov.querySelector('#xa-x');if(x)x.onclick=()=>{const ov2=modal(`<h2>¿Cambiar de alumno?</h2><p>Si el registro de <b>${ID.name}</b> no se ha entregado todavía, descárgalo antes: al cambiar de alumno se borra de este navegador.</p><div class="xa-row"><button class="xa-btn" id="xa-y">Cambiar de alumno</button><button class="xa-btn sec" id="xa-n2">Cancelar</button></div>`);
-      ov2.querySelector('#xa-n2').onclick=panel;ov2.querySelector('#xa-y').onclick=()=>{ID=null;st.set(K_ID,null);try{localStorage.removeItem(K_ID);localStorage.removeItem(K_LOG)}catch(e){}close();onId.forEach(f=>f(null))}}}
+  function panel(){const L=st.get(K_LOG,[]);
+    const ov=modal(`<h2>Mis partidas</h2>${ID?`<p><b>${ID.name}</b> · ${ID.email}<br>${SAVES.map(([k,n])=>`${n}: ${progTxt(st.get(k,null))}`).join(' · ')}</p>`:'<p>Todavía no te has identificado.</p>'}
+      <p>Tus partidas y tus acciones (${L.length}) se guardan en este navegador. Descarga tu archivo para:</p>
+      <ul style="margin:4px 0;padding-left:20px"><li><b>Entregarlo</b> a tu profesor/a, por correo o en la tarea del Campus Virtual.</li><li><b>Seguir en otro ordenador o móvil</b>: allí pulsa «Cargar partidas».</li></ul>
+      <div class="xa-row">${ID?'<button class="xa-btn" id="xa-tk">Descargar mi archivo</button>':''}<button class="xa-btn sec" id="xa-ld">Cargar partidas</button><button class="xa-btn sec" id="xa-b">Cerrar</button></div>
+      <p class="xa-err" id="xa-st" style="color:inherit"></p>
+      ${ID?'<p style="font-size:13px;margin-top:10px"><a href="#" id="xa-x" style="color:inherit">No soy yo / cambiar de alumno</a></p>':''}`);
+    const tk=ov.querySelector('#xa-tk');if(tk)tk.onclick=async()=>{if(await exportAll())ov.querySelector('#xa-st').textContent='✔ Archivo descargado.'};
+    ov.querySelector('#xa-ld').onclick=importAll;ov.querySelector('#xa-b').onclick=close;
+    const x=ov.querySelector('#xa-x');if(x)x.onclick=e=>{e.preventDefault();const ov2=modal(`<h2>¿Cambiar de alumno?</h2><p>Se borrarán de este navegador las partidas y las acciones de <b>${ID.name}</b>. Si no ha descargado su archivo, que lo haga antes.</p><div class="xa-row"><button class="xa-btn" id="xa-y">Cambiar de alumno</button><button class="xa-btn sec" id="xa-n2">Cancelar</button></div>`);
+      ov2.querySelector('#xa-n2').onclick=panel;ov2.querySelector('#xa-y').onclick=()=>{ID=null;try{[K_ID,K_LOG,...SAVES.map(x=>x[0])].forEach(k=>localStorage.removeItem(k))}catch(e){}close();onId.forEach(f=>f(null));location.reload()}}}
+  /* ---- llevar y cargar las partidas (progreso de los juegos + registro) ---- */
+  const SAVES=[['pp_save','Píxel & Pimienta'],['gt_save','Gráficas Tóner'],['sf_save','Sin Filtro']];
+  const prog=v=>v?((v.unlocked||1)-1)*10+Object.values(v.stars||{}).reduce((a,b)=>a+(+b||0),0):-1;
+  const progTxt=v=>v&&v.char?`${Object.keys(v.stars||{}).length} nivel(es) superado(s), ${Object.values(v.stars||{}).reduce((a,b)=>a+(+b||0),0)} ★`:'sin empezar';
+  async function exportAll(){if(!ID){ensureLogin(exportAll);return false}
+    log('suspended','juego',APP.id,APP.name,null,{[BASE+'/ext/motivo']:'descargar archivo'});
+    const saves={};SAVES.forEach(([k])=>{const v=st.get(k,null);if(v)saves[k]=v});
+    const pack={format:'imagen-digital-partidas',version:1,exported:new Date().toISOString(),id:ID,saves,xapi:st.get(K_LOG,[])};
+    const tag=ID.email.split('@')[0]+'_'+new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+    return saveFile(`imagen-digital_${tag}.json`,JSON.stringify(pack))}
+  function mergeLogs(a,b){const m=new Map();[...a,...b].forEach(x=>{if(x&&x.id)m.set(x.id,x)});return [...m.values()].sort((x,y)=>x.timestamp<y.timestamp?-1:1)}
+  function importAll(){const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';inp.style.display='none';document.body.appendChild(inp);
+    inp.onchange=async()=>{const f=inp.files[0];inp.remove();if(!f)return;let pk=null;try{pk=JSON.parse(await f.text())}catch(e){}
+      if(!pk||pk.format!=='imagen-digital-partidas'||!pk.id||!pk.id.email){const ov=modal(`<h2>Archivo no válido</h2><p>Este archivo no es una partida de Imagen digital. Busca el que se llama <b>imagen-digital_…json</b>.</p><div class="xa-row"><button class="xa-btn" id="xa-b">Vale</button></div>`);ov.querySelector('#xa-b').onclick=close;return}
+      const other=ID&&ID.email!==pk.id.email;
+      const rows=SAVES.map(([k,n])=>{const here=st.get(k,null),file=(pk.saves||{})[k]||null,keep=!other&&prog(here)>prog(file);return {k,n,here,file,keep}});
+      const apply=()=>{if(other){try{localStorage.removeItem(K_LOG)}catch(e){}SAVES.forEach(([k])=>{try{localStorage.removeItem(k)}catch(e){}})}
+        ID={...pk.id,anon:pk.id.anon||(ID&&!other&&ID.anon)||anonCode()};st.set(K_ID,ID);
+        rows.forEach(r=>{if(!r.keep&&r.file)st.set(r.k,r.file)});
+        st.set(K_LOG,mergeLogs(other?[]:st.get(K_LOG,[]),pk.xapi||[]));
+        log('resumed','juego',APP.id,APP.name,null,{[BASE+'/ext/motivo']:'partidas cargadas desde archivo'});
+        const ov=modal(`<h2>✔ Partidas cargadas</h2><p>Ya puedes seguir jugando, <b>${ID.name.split(' ')[0]}</b>.</p><ul style="margin:6px 0;padding-left:20px">${rows.map(r=>`<li>${r.n}: ${progTxt(r.keep?r.here:(r.file||r.here))}${r.keep?' (se conserva la de este dispositivo, que va más avanzada)':''}</li>`).join('')}</ul><div class="xa-row"><button class="xa-btn" id="xa-ok2">Continuar</button></div>`);
+        ov.querySelector('#xa-ok2').onclick=()=>{close();location.reload()}};
+      const ov=modal(`<h2>${other?`¿Cargar las partidas de ${pk.id.name}?`:'Partidas encontradas'}</h2>
+        ${other?`<p>En este navegador están las partidas y el registro de <b>${ID.name}</b>. Si cargas las de ${pk.id.name}, se sustituirán. Si ${ID.name} no ha entregado su registro, que lo descargue antes.</p>`:`<p><b>${pk.id.name}</b> · ${(pk.xapi||[]).length} acciones registradas.</p>`}
+        <ul style="margin:6px 0;padding-left:20px">${rows.map(r=>`<li>${r.n}: ${progTxt(r.file)}${r.keep?' · <i>este dispositivo va más avanzado y se conserva</i>':''}</li>`).join('')}</ul>
+        <p style="font-size:14px;opacity:.8">El registro de actividad del archivo ${other?'sustituirá':'se juntará con'} el de este dispositivo.</p>
+        <div class="xa-row"><button class="xa-btn" id="xa-go2">${other?'Cargar las de '+pk.id.name.split(' ')[0]:'Cargar y seguir jugando'}</button><button class="xa-btn sec" id="xa-b">Cancelar</button></div>`);
+      ov.querySelector('#xa-b').onclick=close;ov.querySelector('#xa-go2').onclick=apply};
+    inp.click()}
   function init(app){APP=app;if(ID)log('launched','juego',APP.id,APP.name);
     document.addEventListener('visibilitychange',()=>{if(document.hidden)log('suspended','juego',APP.id,APP.name);else log('resumed','juego',APP.id,APP.name)});
     window.addEventListener('pagehide',()=>log('suspended','juego',APP.id,APP.name))}
@@ -772,7 +802,7 @@ const XA=(()=>{
     root.querySelectorAll('input[type=range]').forEach(r=>{if(r.offsetParent!==null)out.push((r.getAttribute('aria-label')||r.id)+' '+r.value)});
     root.querySelectorAll('[aria-pressed="true"]').forEach(b=>{if(b.offsetParent!==null)out.push(b.textContent.trim().replace(/\s+/g,' ').slice(0,60))});
     return out.join(' | ').slice(0,400)}
-  return {init,log,dur,ensureLogin,panel,readResponse,modal,close,onIdentity:f=>onId.push(f),get id(){return ID},saveFile}
+  return {init,log,dur,ensureLogin,panel,readResponse,modal,close,exportAll,importAll,onIdentity:f=>onId.push(f),get id(){return ID},saveFile}
 })();
 
 /* ===== Enganches del registro xAPI en este juego ===== */
@@ -796,16 +826,21 @@ const XA=(()=>{
   wrap('cheat',(o,a)=>{XA.log('experienced','herramienta','chuleta','Chuleta');return o(...a)});
   /* identificación antes de empezar y botón «Mi registro» */
   const sb=document.getElementById('startBtn'),go=sb.onclick;sb.onclick=e=>XA.ensureLogin(()=>go(e));
-  const add=(after,id)=>{const b=document.getElementById(after);if(b)b.insertAdjacentHTML('afterend',`<button class="btn sec" id="${id}">Mi registro</button>`);const nb=document.getElementById(id);if(nb)nb.onclick=()=>XA.panel()};
+  const add=(after,id)=>{const b=document.getElementById(after);if(b)b.insertAdjacentHTML('afterend',`<button class="btn sec" id="${id}">Mis partidas</button>`);const nb=document.getElementById(id);if(nb)nb.onclick=()=>XA.panel()};
   add('cheatBtn0','xaReg0');add('cheatBtn1','xaReg1');
+  /* borrar el progreso o abandonar un nivel también queda registrado (el registro nunca se borra) */
+  const MOT='https://imagendigital.uca.es/xapi/ext/motivo';
+  document.addEventListener('click',e=>{const b=e.target&&e.target.closest?e.target.closest('button'):null;if(!b)return;
+    if(b.id==='rYes'||b.id==='rY')XA.log('terminated','juego',H.app,H.appName,null,{[MOT]:'borró el progreso'});
+    if(b.id==='xYes'||b.id==='xY'){try{XA.log('terminated','nivel',H.prefix+(run[H.ri]+1),lvl().title,{completion:false},{[MOT]:'salió del nivel sin terminar'})}catch(err){}}},true);
   /* botón «Salir» en la pantalla de niveles */
   const r1=document.getElementById('xaReg1');
   if(r1){r1.insertAdjacentHTML('afterend','<button class="btn sec" id="xaExit">Salir</button>');document.getElementById('xaExit').onclick=()=>{
     XA.log('suspended','juego',H.app,H.appName,null,{'https://imagendigital.uca.es/xapi/ext/motivo':'salir'});
     const portal=!window.claude;
-    const ov=XA.modal(`<h2>✔ Progreso guardado</h2><p>Tu progreso en <b>${H.appName}</b> y tu registro de actividad se han guardado <b>en este ordenador y en este navegador</b>. La próxima vez que entres desde aquí, seguirás donde lo has dejado.</p>
-      <p style="font-size:15px;opacity:.85">Si juegas desde otro ordenador o móvil, en otro navegador o en modo incógnito, empezarás de cero. Si usas varios dispositivos, entrega el registro de cada uno (botón «Mi registro»).</p>
-      <div class="xa-row"><button class="xa-btn" id="xa-home">${portal?'Ir a todos los juegos':'Ir a la pantalla de inicio'}</button><button class="xa-btn sec" id="xa-stay">Seguir jugando</button></div>`);
+    const ov=XA.modal(`<h2>✔ Progreso guardado</h2><p>Tu partida de <b>${H.appName}</b> se ha guardado en este ordenador. Si tienes que entregarla o vas a seguir en otro ordenador, descarga tu archivo.</p>
+      <div class="xa-row"><button class="xa-btn" id="xa-home">${portal?'Ir a todos los juegos':'Ir a la pantalla de inicio'}</button><button class="xa-btn sec" id="xa-take2">Descargar mi archivo</button><button class="xa-btn sec" id="xa-stay">Seguir jugando</button></div><p class="xa-err" id="xa-st2" style="color:inherit"></p>`);
+    ov.querySelector('#xa-take2').onclick=async()=>{if(await XA.exportAll())ov.querySelector('#xa-st2').textContent='✔ Archivo descargado.'};
     ov.querySelector('#xa-stay').onclick=XA.close;
     ov.querySelector('#xa-home').onclick=()=>{XA.close();if(portal)location.href='../index.html';else{show('title');window.scrollTo(0,0)}}}}
   if(!window.claude){const t=document.getElementById('startBtn');if(t&&t.parentNode)t.parentNode.insertAdjacentHTML('beforebegin','<p style="margin:0 0 6px"><a href="../index.html" style="color:inherit;font-weight:700">← Todos los juegos</a></p>')}
