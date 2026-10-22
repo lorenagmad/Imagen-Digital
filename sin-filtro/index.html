@@ -139,7 +139,70 @@ table{border-collapse:collapse;width:100%;font-size:15px}td,th{border:1px solid 
 .tblwrap{overflow-x:auto}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 @media (max-width:480px){body{font-size:16px}.task{padding:16px 14px}canvas.h{width:120px;height:52px}}
+
+/* ---------- tacto en el móvil y movimiento ----------
+   Las animaciones solo existen con la clase .motion (la pone un script en <head>) y sin
+   «reducir movimiento»: si el JavaScript no corre o el alumno pide menos movimiento, todo se ve quieto. */
+:root{--mo-ok:var(--teal);--mo-ko:var(--coral);--mo-hover:var(--bg);--mo-ease:cubic-bezier(.2,.8,.2,1)}
+button,a{-webkit-tap-highlight-color:transparent}
+button{touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.backp{margin:0 0 10px;text-align:left}
+.back{display:inline-block;color:var(--muted);font-weight:700;font-size:15px;text-decoration:none;padding:6px 0}
+.back:hover{color:var(--ink);text-decoration:underline}
+.stat{display:inline-block}
+.opt,.char,.flr,.room,.gala,.btn-s,.seg button,.bit button,.lights button{transition:transform .14s var(--mo-ease),background-color .15s,border-color .15s,box-shadow .15s,color .15s}
+.opt:active,.char:active,.btn-s:active,.seg button:active,.lights button:active,.bit button:active,
+.flr:not([disabled]):active,.room:not([disabled]):active,.gala:not([disabled]):active{transform:scale(.97)}
+.prog i{transition:background-color .3s}
+@media (hover:hover){
+  .flr:not([disabled]):hover,.room:not([disabled]):hover,.gala:not([disabled]):hover{background:var(--mo-hover)}
+  .opt:not([aria-pressed="true"]):hover{border-color:var(--muted)}
+}
+@media (max-width:560px){
+  .bar .wrap{gap:2px 10px;padding:8px 16px}
+  .bar .wrap>span:first-child{flex:1 0 100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #cheatBtn2{margin-left:auto}
+  .chars{grid-template-columns:1fr;gap:10px}
+  .char{display:grid;grid-template-columns:64px 1fr;column-gap:14px;row-gap:2px;align-items:start;padding:12px 14px}
+  .char svg{grid-row:1/4;width:64px;height:64px}
+  .char .perk{justify-self:start;margin-top:4px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .motion section:not(.hidden)>.wrap{animation:mo-in .32s var(--mo-ease) backwards}
+  .motion :is(.flr,.room,.gala){animation:mo-in .34s var(--mo-ease) backwards}
+  .motion :is(.flr,.room,.gala):nth-child(2){animation-delay:.04s}
+  .motion :is(.flr,.room,.gala):nth-child(3){animation-delay:.08s}
+  .motion :is(.flr,.room,.gala):nth-child(4){animation-delay:.12s}
+  .motion :is(.flr,.room,.gala):nth-child(5){animation-delay:.16s}
+  .motion :is(.flr,.room,.gala):nth-child(6){animation-delay:.2s}
+  .motion :is(.flr,.room,.gala):nth-child(n+7){animation-delay:.24s}
+  .motion .dlg{animation:mo-pop .26s var(--mo-ease) backwards;transform-origin:0 0}
+  .motion .dlg.me{transform-origin:100% 0}
+  .motion .task{animation:mo-in .3s var(--mo-ease) backwards}
+  .motion .fb{animation:mo-in .22s var(--mo-ease) backwards}
+  .motion .fb.ok{animation:mo-ok .42s var(--mo-ease) backwards}
+  .motion .fb.ko{animation:mo-shake .4s ease-out}
+  .motion .modal:not(.hidden){animation:mo-fade .2s ease-out backwards}
+  .motion .modal:not(.hidden) .sheet{animation:mo-sheet .32s var(--mo-ease) backwards}
+  .motion .end-art span{display:inline-block;animation:mo-star .5s cubic-bezier(.3,1.5,.5,1) .12s backwards}
+  .motion .end-art span:nth-child(2){animation-delay:.24s}
+  .motion .end-art span:nth-child(3){animation-delay:.36s}
+  .motion .stat.bump{animation:mo-bump .4s var(--mo-ease)}
+  .motion .stat.hurt{animation:mo-hurt .42s ease-out}
+  .motion .xa-ov{animation:mo-fade .2s ease-out backwards}
+  .motion .xa-box{animation:mo-sheet .32s var(--mo-ease) backwards}
+}
+@keyframes mo-in{from{opacity:0;transform:translateY(8px)}}
+@keyframes mo-pop{from{opacity:0;transform:scale(.94)}}
+@keyframes mo-fade{from{opacity:0}}
+@keyframes mo-sheet{from{opacity:0;transform:translateY(16px) scale(.98)}}
+@keyframes mo-ok{0%{opacity:0;transform:scale(.96)}60%{opacity:1;transform:scale(1.015)}100%{transform:none}}
+@keyframes mo-shake{0%{opacity:0}15%{opacity:1}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}100%{transform:none}}
+@keyframes mo-star{from{opacity:0;transform:scale(.3) rotate(-20deg)}}
+@keyframes mo-bump{40%{transform:scale(1.2);color:var(--mo-ok)}}
+@keyframes mo-hurt{20%,60%{transform:translateX(-3px)}40%,80%{transform:translateX(3px)}50%{color:var(--mo-ko)}}
 </style>
+<script>document.documentElement.classList.add('motion')</script>
 </head>
 <body>
 
@@ -560,7 +623,13 @@ function renderMap(){const c=me(),done=Object.keys(save.stars).length;
 function startGala(i){const c=me();
   run={g:i,idx:0,lives:c.id==='chus'?4:3,maxLives:c.id==='chus'?4:3,score:0,freeHint:c.id==='iria'?1:0,results:[]};
   show('level');$('#lvTitle').textContent=GALAS[i].title;updBar();playDialog(GALAS[i].intro,renderTask)}
-function updBar(){$('#lvLives').textContent='❤️'.repeat(run.lives)+'·'.repeat(Math.max(0,run.maxLives-run.lives));$('#lvLives').setAttribute('aria-label',`${run.lives} votos del público`);$('#lvScore').textContent=`${run.score} pts`}
+/* reinicia una animación de la barra (puntos que suben, vidas que se pierden) */
+function pulse(el,cls){el.classList.remove(cls);void el.offsetWidth;el.classList.add(cls)}
+function updBar(){$('#lvLives').textContent='❤️'.repeat(run.lives)+'·'.repeat(Math.max(0,run.maxLives-run.lives));$('#lvLives').setAttribute('aria-label',`${run.lives} votos del público`);$('#lvScore').textContent=`${run.score} pts`;
+  {const sc=$('#lvScore'),lv=$('#lvLives');
+   if(+sc.dataset.v<run.score)pulse(sc,'bump');sc.dataset.v=run.score;
+   if(+lv.dataset.v>run.lives)pulse(lv,'hurt');lv.dataset.v=run.lives}
+}
 function speaker(k){if(k==='me'){const c=me();return{name:c.name,av:c.av,me:true}}return{...NPC[k],me:false}}
 function playDialog(lines,done){let k=0;const st=$('#stage');
   st.innerHTML='<div id="dbox"></div><div class="actions"><button class="btn" id="dNext">Siguiente</button><button class="btn sec" id="dSkip">Saltar</button></div>';
@@ -629,7 +698,7 @@ function finish(){const G=GALAS[run.g],n=run.g+1,max=G.tasks.length*100,st=run.s
   save.stars[n]=Math.max(save.stars[n]||0,st);save.best[n]=Math.max(save.best[n]||0,run.score);save.unlocked=Math.max(save.unlocked,Math.min(GALAS.length,n+1));persist();
   const fin=n===GALAS.length,tot=Object.values(save.best).reduce((a,b)=>a+b,0),maxT=GALAS.reduce((a,g)=>a+g.tasks.length*100,0);
   const rank=tot/maxT>=.9?'Ganador/a de SIN FILTRO':tot/maxT>=.7?'Finalista de oro':tot/maxT>=.45?'Favorito/a del público':'Concursante revelación';
-  openModal(`<div class="end-art" aria-hidden="true">${'★'.repeat(st)}${'☆'.repeat(3-st)}</div><h2>${fin?'¡Fin de la temporada!':`${G.title.split(' · ')[0]} superada`}</h2>
+  openModal(`<div class="end-art" aria-hidden="true">${[...'★'.repeat(st)+'☆'.repeat(3-st)].map(s=>`<span>${s}</span>`).join('')}</div><h2>${fin?'¡Fin de la temporada!':`${G.title.split(' · ')[0]} superada`}</h2>
    <p class="big">${run.score} <span style="font-size:20px">/ ${max} pts</span></p>
    ${fin?`<p>Audiencia total: <b>${tot.toLocaleString('es-ES')}</b> de ${maxT.toLocaleString('es-ES')} puntos. Título: <b>${rank}</b>.</p>`:`<p>${st===3?'Ovación del público y el jurado en pie. Bueno, Don Remigio se ha levantado a por un café, pero cuenta.':st===2?'Buena gala. Repite si quieres las tres estrellas.':'Te salvas por los pelos. Repítela para mejorar la nota.'}</p>`}
    <div class="actions">${fin?'':`<button class="btn" id="fN">Siguiente gala</button>`}<button class="btn sec" id="fR">Repetir</button><button class="btn sec" id="fO">Escaleta</button></div>`);
@@ -798,7 +867,7 @@ const XA=(()=>{
     ov.querySelector('#xa-take2').onclick=async()=>{if(await XA.exportAll())ov.querySelector('#xa-st2').textContent='✔ Archivo descargado.'};
     ov.querySelector('#xa-stay').onclick=XA.close;
     ov.querySelector('#xa-home').onclick=()=>{XA.close();if(portal)location.href='../index.html';else{show('title');window.scrollTo(0,0)}}}}
-  if(!window.claude){const t=document.getElementById('startBtn');if(t&&t.parentNode)t.parentNode.insertAdjacentHTML('beforebegin','<p style="margin:0 0 6px"><a href="../index.html" style="color:inherit;font-weight:700">← Todos los juegos</a></p>')}
+  if(!window.claude){const t=document.querySelector('#title .wrap');if(t)t.insertAdjacentHTML('afterbegin','<p class="backp"><a class="back" href="../index.html">← Todos los juegos</a></p>')}
 })();
 
 </script>

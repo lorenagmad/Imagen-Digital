@@ -67,8 +67,36 @@ table{border-collapse:collapse;font-size:15px}td,th{border:1px solid var(--line)
 th{background:var(--soft)}
 .note{font-size:14px;color:var(--muted)}
 footer{margin:22px 0 10px;font-size:14px;color:var(--muted)}
-@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+/* ---------- tacto en el móvil y movimiento (solo con .motion y sin «reducir movimiento») ---------- */
+:root{--mo-ease:cubic-bezier(.2,.8,.2,1)}
+button,a,summary{-webkit-tap-highlight-color:transparent}
+button{touch-action:manipulation}
+.btn,.seg button,details.f summary{transition:transform .14s var(--mo-ease),background-color .15s,border-color .15s,color .15s}
+.btn:active,.seg button:active{transform:scale(.97)}
+details.f{transition:border-color .2s}
+@media (hover:hover){details.f summary:hover{background:var(--soft)}.seg button:not([aria-pressed="true"]):hover{border-color:var(--muted)}}
+@media (prefers-reduced-motion:no-preference){
+  .motion details.f{animation:mo-in .34s var(--mo-ease) backwards}
+  .motion details.f:nth-child(2){animation-delay:.04s}
+  .motion details.f:nth-child(3){animation-delay:.08s}
+  .motion details.f:nth-child(4){animation-delay:.12s}
+  .motion details.f:nth-child(5){animation-delay:.16s}
+  .motion details.f:nth-child(n+6){animation-delay:.2s}
+  .motion details.f[open] .body{animation:mo-in .26s var(--mo-ease) backwards}
+  .motion .res{animation:mo-ok .4s var(--mo-ease) backwards}
+  .motion .res.err{animation:mo-shake .4s ease-out}
+  .motion .st{animation:mo-in .3s var(--mo-ease) backwards}
+  .motion .st:nth-child(3){animation-delay:.05s}.motion .st:nth-child(5){animation-delay:.1s}
+  .motion .st:nth-child(7){animation-delay:.15s}.motion .st:nth-child(9){animation-delay:.2s}
+  .motion .st:nth-child(n+11){animation-delay:.25s}
+  .motion .xa-box{animation:mo-in .3s var(--mo-ease) backwards}
+}
+@keyframes mo-in{from{opacity:0;transform:translateY(8px)}}
+@keyframes mo-ok{0%{opacity:0;transform:scale(.96)}60%{opacity:1;transform:scale(1.015)}100%{transform:none}}
+@keyframes mo-shake{0%{opacity:0}15%{opacity:1}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}100%{transform:none}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
+<script>document.documentElement.classList.add('motion')</script>
 </head>
 <body>
 <div class="wrap">
