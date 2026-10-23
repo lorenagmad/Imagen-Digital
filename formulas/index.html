@@ -243,7 +243,7 @@ function stairs(bits,hl){const order=['TB','GB','MB','KB','byte','bit'];
 
 /* ---------- definición de las fórmulas ---------- */
 const F=[
- {id:'unidades',ic:'🪜',title:'Escalera de unidades',sub:'Pasa de bits a bytes, KB, MB, GB y TB',
+ {id:'unidades',ic:'<svg viewBox="0 0 24 24" width="24" height="24"><path d="M7 2v20M17 2v20" stroke="#B7793E" stroke-width="2.6" stroke-linecap="round"/><path d="M7 6h10M7 11h10M7 16h10" stroke="#D9A15E" stroke-width="2.2"/></svg>',title:'Escalera de unidades',sub:'Pasa de bits a bytes, KB, MB, GB y TB',
   formula:'1 byte = 8 bits · 1 KB = 1024 bytes · 1 MB = 1024 KB · 1 GB = 1024 MB',
   expl:'Para <b>subir</b> de unidad (de bits a bytes, de bytes a KB…) se <b>divide</b>; para <b>bajar</b>, se <b>multiplica</b>. Entre bits y bytes el número es 8; entre las demás, 1024.',
   vars:null,
@@ -291,7 +291,7 @@ const F=[
     if(k==='px'){const cm=g('cm'),p=g('ppp');need(cm,p);const inch=cm/2.54;return {big:`${Math.round(inch*p)} px`,steps:[`Pulgadas = cm ÷ 2,54 = ${big(cm)} ÷ 2,54 = ${fmt(inch,3)} in`,`px = pulgadas × ppp = ${fmt(inch,3)} × ${big(p)} = ${fmt(inch*p,2)} → <b>${Math.round(inch*p)} px</b>`],log:`${cm}cm ${p}ppp → ${Math.round(inch*p)} px`}}
     const px=g('px'),cm=g('cm');need(px,cm);const inch=cm/2.54;return {big:`${fmt(px/inch,1)} ppp`,steps:[`Pulgadas = cm ÷ 2,54 = ${fmt(inch,3)} in`,`ppp = px ÷ pulgadas = ${big(px)} ÷ ${fmt(inch,3)} = ${fmt(px/inch,1)} ppp`],log:`${px}px ${cm}cm → ${fmt(px/inch,1)} ppp`}}},
 
- {id:'transmision',ic:'📶',title:'Velocidad de transmisión',sub:'Cuánto tarda en subir o bajar un archivo',
+ {id:'transmision',ic:'<svg viewBox="0 0 24 24" width="24" height="24"><rect x="10" y="1" width="4" height="3" rx="1" fill="#5A6482"/><path d="M18.5 5.5l1.6-1.6" stroke="#5A6482" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="14" r="8.5" fill="#fff" stroke="#3A6FF2" stroke-width="2.4"/><path d="M12 14V9.5M12 14l3.2 2" stroke="#E5484D" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="14" r="1.3" fill="#1B2440"/></svg>',title:'Velocidad de transmisión',sub:'Cuánto tarda en subir o bajar un archivo',
   formula:'Tiempo (s) = tamaño (Mb) ÷ velocidad (Mbps)   ·   1 MB = 8 Mb',
   expl:'Las conexiones se miden en <b>megabits</b> por segundo (Mbps), y los archivos en <b>megabytes</b> (MB). Pasa el tamaño a megabits multiplicando por 8 y divide entre la velocidad. Si solo puedes usar una parte de la conexión, multiplica la velocidad por ese porcentaje.',
   vars:[['t','Tiempo'],['size','Tamaño'],['v','Velocidad']],
