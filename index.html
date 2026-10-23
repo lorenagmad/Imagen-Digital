@@ -55,6 +55,47 @@ a,button{-webkit-tap-highlight-color:transparent}button{touch-action:manipulatio
   .motion .info{animation-delay:.32s}
   .motion .xa-box{animation:mo-in .3s cubic-bezier(.2,.8,.2,1) backwards}
 }
+/* ---------- ilustraciones animadas (solo con .motion y sin «reducir movimiento») ---------- */
+.card .art svg.scene{display:block;height:108px;width:auto;max-width:100%}
+.card.lab .art svg.scene{height:118px}
+.scene .w.off,.scene .bars,.scene .noise,.scene .scan,.scene .d2,.scene .d3{opacity:0}
+.scene .ant,.scene .dial,.scene .k,.scene .shake{transform-box:fill-box}
+.scene .ant{transform-origin:50% 100%}.scene .dial{transform-origin:50% 100%}.scene .k{transform-origin:center}
+@media (prefers-reduced-motion:no-preference){
+  .motion .scene .w{animation:sc-win var(--t) steps(1,end) var(--d) infinite}
+  .motion .scene .w.off{animation-name:sc-win-off}
+  .motion .scene .beacon{animation:sc-blink 1.6s ease-in-out infinite}
+  .motion .scene .sheet{animation:sc-print 4.2s cubic-bezier(.45,0,.55,1) infinite}
+  .motion .scene .shake{animation:sc-shake .18s steps(2,end) infinite}
+  .motion .scene .led{animation:sc-led 1.2s ease-in-out infinite}
+  .motion .scene .led:nth-of-type(2){animation-delay:.4s}.motion .scene .led:nth-of-type(3){animation-delay:.8s}
+  .motion .scene .bar{transform-box:fill-box;transform-origin:left;animation:sc-load 4.2s linear infinite}
+  .motion .scene .noise{animation:sc-noise 6s linear infinite}
+  .motion .scene .jit{animation:sc-jit .24s steps(3,end) infinite}
+  .motion .scene .bars{animation:sc-bars 6s linear infinite}
+  .motion .scene .scan{animation:sc-scan 2.2s linear infinite}
+  .motion .scene .dial{animation:sc-dial 6s linear infinite}
+  .motion .scene .ant{animation:sc-ant 3s ease-in-out infinite}
+  .motion .scene .d1{animation:sc-d1 6s linear infinite}.motion .scene .d2{animation:sc-d2 6s linear infinite}.motion .scene .d3{animation:sc-d3 6s linear infinite}
+  .motion .scene .hit{animation:sc-key 2s ease-out infinite}
+}
+@keyframes sc-win{0%{opacity:1}70%{opacity:0}}
+@keyframes sc-win-off{0%{opacity:0}45%{opacity:1}}
+@keyframes sc-blink{50%{opacity:.25}}
+@keyframes sc-print{0%{transform:translateY(-40px)}55%,85%{transform:none;opacity:1}100%{transform:translateY(6px);opacity:0}}
+@keyframes sc-shake{50%{transform:translateY(.6px)}}
+@keyframes sc-led{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes sc-load{0%{transform:scaleX(0)}55%,100%{transform:scaleX(1)}}
+@keyframes sc-noise{0%,20%{opacity:1}22%,44%{opacity:0}46%,54%{opacity:1}56%,100%{opacity:0}}
+@keyframes sc-jit{33%{transform:translate(-3px,2px)}66%{transform:translate(2px,-3px)}}
+@keyframes sc-bars{0%,21%{opacity:0}22%,44%{opacity:1}45%,100%{opacity:0}}
+@keyframes sc-scan{from{transform:translateY(0)}to{transform:translateY(62px)}}
+@keyframes sc-dial{0%,20%{transform:rotate(-60deg)}22%,54%{transform:rotate(0)}56%,100%{transform:rotate(60deg)}}
+@keyframes sc-ant{50%{transform:rotate(4deg)}}
+@keyframes sc-d1{0%,32%{opacity:1}34%,100%{opacity:0}}
+@keyframes sc-d2{0%,33%{opacity:0}34%,65%{opacity:1}67%,100%{opacity:0}}
+@keyframes sc-d3{0%,66%{opacity:0}67%,99%{opacity:1}100%{opacity:0}}
+@keyframes sc-key{0%,6%{transform:scale(.8);fill:#FFD23F}20%{transform:none;fill:#3A4670}}
 @keyframes mo-in{from{opacity:0;transform:translateY(10px)}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -198,11 +239,69 @@ const XA=(()=>{
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const inClaude=!!window.claude;
+/* ---------- ilustraciones de las tarjetas ----------
+   Dibujo quieto por defecto; las animaciones (CSS, más abajo en <style>) solo corren con .motion
+   y sin «reducir movimiento». Sin animación se ve el edificio con luces, el folio impreso y el logo en la tele. */
+const ART=(()=>{
+  const N='#1B2440';
+  /* edificio: ventanas que se encienden y se apagan a destiempo */
+  let win='';
+  [54,68,82,96].forEach((x,c)=>[22,38,54,70].forEach((y,r)=>{
+    const k=c*4+r,on=[0,3,5,6,9,12,14].includes(k);
+    win+=`<rect x="${x}" y="${y}" width="10" height="11" rx="1.5" fill="#2E3A5E"/><rect class="w${on?'':' off'}" x="${x}" y="${y}" width="10" height="11" rx="1.5" fill="#FFD23F" style="--t:${3+(k*7%5)}s;--d:-${(k*13%9)/2}s"/>`}));
+  const building=`<svg viewBox="0 0 160 110" class="scene">
+    <rect x="6" y="52" width="32" height="52" rx="2" fill="#000" opacity=".14"/><rect x="122" y="38" width="32" height="66" rx="2" fill="#000" opacity=".14"/>
+    <path d="M80 3v12" stroke="${N}" stroke-width="3"/><circle class="beacon" cx="80" cy="4" r="3.4" fill="#FFF3C4"/>
+    <rect x="46" y="14" width="68" height="90" rx="3" fill="${N}"/>${win}
+    <rect x="72" y="88" width="16" height="16" rx="2" fill="#FFD23F"/><path d="M80 88v16" stroke="${N}" stroke-width="1.5"/>
+    <rect x="0" y="103" width="160" height="7" fill="#000" opacity=".18"/></svg>`;
+  /* imprenta: sale un folio con una imagen en CMYK y parpadean los pilotos de tinta */
+  const printer=`<svg viewBox="0 0 160 110" class="scene">
+    <rect x="54" y="6" width="52" height="26" fill="#fff" stroke="${N}" stroke-width="2.5"/>
+    <g class="shake"><rect x="28" y="28" width="104" height="46" rx="8" fill="#F1F2F5" stroke="${N}" stroke-width="3"/>
+    <path d="M30 40h100" stroke="${N}" stroke-width="2" opacity=".25"/>
+    <rect x="38" y="46" width="34" height="12" rx="2" fill="${N}"/><rect class="bar" x="41" y="50" width="20" height="4" rx="1" fill="#7ED957"/>
+    <circle class="led" cx="102" cy="52" r="3.6" fill="#00A0D6"/><circle class="led" cx="112" cy="52" r="3.6" fill="#E2238C"/><circle class="led" cx="122" cy="52" r="3.6" fill="#FFD100"/>
+    <rect x="42" y="64" width="76" height="6" rx="3" fill="${N}"/></g>
+    <clipPath id="tray"><rect x="36" y="68" width="88" height="42"/></clipPath>
+    <g clip-path="url(#tray)"><g class="sheet"><rect x="50" y="67" width="60" height="40" fill="#fff" stroke="${N}" stroke-width="2"/>
+      <rect x="56" y="73" width="22" height="16" fill="#00A0D6"/><circle cx="70" cy="83" r="6" fill="#E2238C" style="mix-blend-mode:multiply"/><path d="M58 89l7-7 6 5" stroke="#FFD100" stroke-width="3" fill="none"/>
+      <rect x="83" y="74" width="21" height="3" rx="1.5" fill="${N}"/><rect x="83" y="80" width="17" height="3" rx="1.5" fill="${N}" opacity=".5"/><rect x="83" y="86" width="19" height="3" rx="1.5" fill="${N}" opacity=".5"/>
+      <rect x="56" y="95" width="48" height="4" fill="#00A0D6"/><rect x="68" y="95" width="12" height="4" fill="#E2238C"/><rect x="80" y="95" width="12" height="4" fill="#FFD100"/><rect x="92" y="95" width="12" height="4" fill="#16181D"/></g></g></svg>`;
+  /* tele: busca canal (nieve, carta de ajuste) y sintoniza Sin Filtro */
+  let snow='';
+  for(let i=0;i<120;i++){const x=36+(i%12)*6,y=24+Math.floor(i/12)*6,g=[40,90,140,190,235][(i*37+Math.floor(i/5))%5];snow+=`<rect x="${x}" y="${y}" width="6" height="6" fill="rgb(${g},${g},${g})"/>`}
+  const tv=`<svg viewBox="0 0 160 110" class="scene">
+    <g class="ant"><path d="M80 24L58 4M80 24l22-18" stroke="${N}" stroke-width="2.5" stroke-linecap="round"/><circle cx="58" cy="4" r="3" fill="${N}"/><circle cx="102" cy="6" r="3" fill="${N}"/></g>
+    <path d="M52 96l-6 10M108 96l6 10" stroke="${N}" stroke-width="4" stroke-linecap="round"/>
+    <rect x="30" y="22" width="100" height="76" rx="12" fill="#1A1C33"/><rect x="33" y="25" width="94" height="70" rx="10" fill="none" stroke="#E69500" stroke-width="1.5" opacity=".6"/>
+    <clipPath id="scr"><rect x="40" y="31" width="62" height="58" rx="9"/></clipPath>
+    <g clip-path="url(#scr)">
+      <rect x="40" y="31" width="62" height="58" fill="#0D0F1E"/>
+      <circle cx="49" cy="40" r="2.4" fill="#FF6369"/><text x="55" y="42.5" font-size="7" font-weight="700" fill="#FF6369" font-family="system-ui,sans-serif">EN DIRECTO</text>
+      <text x="71" y="62" text-anchor="middle" font-size="15" font-weight="800" fill="#fff" font-family="'Bricolage Grotesque',system-ui,sans-serif">SIN</text>
+      <text x="71" y="77" text-anchor="middle" font-size="15" font-weight="800" fill="#FFB21E" font-family="'Bricolage Grotesque',system-ui,sans-serif">FILTRO</text>
+      <g class="bars">${['#fff','#FFD23F','#2DD4BF','#2FA36B','#FF6B9D','#F0434A','#3A6FF2'].map((c,i)=>`<rect x="${40+i*62/7}" y="31" width="${62/7+.2}" height="44" fill="${c}"/>`).join('')}<rect x="40" y="75" width="62" height="14" fill="#141629"/><rect x="62" y="78" width="18" height="8" fill="#fff"/></g>
+      <g class="noise"><g class="jit">${snow}</g></g>
+      <rect class="scan" x="40" y="29" width="62" height="5" fill="#fff" opacity=".1"/>
+    </g>
+    <circle cx="116" cy="44" r="6" fill="#E69500"/><path class="dial" d="M116 44v-5" stroke="#1A1C33" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="116" cy="62" r="6" fill="#E69500"/><path d="M116 62h4" stroke="#1A1C33" stroke-width="2" stroke-linecap="round"/>
+    <path d="M110 76h12M110 80h12M110 84h12" stroke="#E69500" stroke-width="1.5" opacity=".6"/></svg>`;
+  /* calculadora del laboratorio: va cambiando de fórmula */
+  const keys=[];for(let r=0;r<4;r++)for(let c=0;c<3;c++)keys.push(`<rect class="k${r*3+c===7?' hit':''}" x="${38+c*16}" y="${44+r*13}" width="12" height="9" rx="2" fill="${r===3&&c===2?'#FFD23F':'#3A4670'}"/>`);
+  const lab=`<svg viewBox="0 0 120 110" class="scene">
+    <rect x="28" y="6" width="64" height="98" rx="9" fill="${N}"/><rect x="35" y="13" width="50" height="24" rx="3" fill="#CFE8D8"/>
+    <g font-family="'Bricolage Grotesque',system-ui,sans-serif" font-weight="800" fill="${N}" text-anchor="end">
+      <text class="d d1" x="81" y="31" font-size="13">2²⁴</text><text class="d d2" x="81" y="31" font-size="11">×8 bits</text><text class="d d3" x="81" y="31" font-size="11">300 ppp</text></g>
+    ${keys.join('')}</svg>`;
+  return {building,printer,tv,lab};
+})();
 const APPS=[
- {id:'pixel-pimienta',name:'Píxel & Pimienta',tema:'Tema 1',col:'var(--r)',art:'🏢',desc:'Primer día de becario en una agencia caótica: binario, hexadecimal, profundidad de color, peso de las imágenes y velocidad de transmisión.',href:'pixel-pimienta/index.html',claude:'https://claude.ai/artifact/U3qoV3CVJRoibqKYhWLSSR'},
- {id:'graficas-toner',name:'Gráficas Tóner',tema:'Tema 2',col:'var(--g)',art:'🖨️',desc:'La imprenta de la abuela Remedios: resolución, de píxeles a centímetros, modelos de color, formatos e imágenes vectoriales.',href:'graficas-toner/index.html',claude:'https://claude.ai/artifact/BWbrdRNYAPANLzqcSiQh64'},
- {id:'sin-filtro',name:'Sin Filtro',tema:'Tema 3',col:'var(--b)',art:'📺',desc:'El concurso de televisión de jóvenes publicistas: remuestreo, interpolación, histograma, imagen publicitaria, colores corporativos y proporciones.',href:'sin-filtro/index.html',claude:'https://claude.ai/artifact/QCEPAMLULEewWoAnsfPtmH'},
- {id:'formulas',name:'Laboratorio de fórmulas',tema:'Temas 1, 2 y 3',col:'var(--y)',art:'🧮',desc:'Todas las fórmulas y unidades explicadas. Elige la incógnita, escribe los datos y obtén la solución paso a paso, con la escalera de unidades.',href:'formulas/index.html',claude:'https://claude.ai/artifact/SWkodijYLhxDkc3H889raA'}
+ {id:'pixel-pimienta',name:'Píxel & Pimienta',tema:'Tema 1',col:'var(--r)',art:ART.building,desc:'Primer día de becario en una agencia caótica: binario, hexadecimal, profundidad de color, peso de las imágenes y velocidad de transmisión.',href:'pixel-pimienta/index.html',claude:'https://claude.ai/artifact/U3qoV3CVJRoibqKYhWLSSR'},
+ {id:'graficas-toner',name:'Gráficas Tóner',tema:'Tema 2',col:'var(--g)',art:ART.printer,desc:'La imprenta de la abuela Remedios: resolución, de píxeles a centímetros, modelos de color, formatos e imágenes vectoriales.',href:'graficas-toner/index.html',claude:'https://claude.ai/artifact/BWbrdRNYAPANLzqcSiQh64'},
+ {id:'sin-filtro',name:'Sin Filtro',tema:'Tema 3',col:'var(--b)',art:ART.tv,desc:'El concurso de televisión de jóvenes publicistas: remuestreo, interpolación, histograma, imagen publicitaria, colores corporativos y proporciones.',href:'sin-filtro/index.html',claude:'https://claude.ai/artifact/QCEPAMLULEewWoAnsfPtmH'},
+ {id:'formulas',name:'Laboratorio de fórmulas',tema:'Temas 1, 2 y 3',col:'var(--y)',art:ART.lab,desc:'Todas las fórmulas y unidades explicadas. Elige la incógnita, escribe los datos y obtén la solución paso a paso, con la escalera de unidades.',href:'formulas/index.html',claude:'https://claude.ai/artifact/SWkodijYLhxDkc3H889raA'}
 ];
 function render(){
   $('#cards').innerHTML=APPS.map(a=>`<a class="card ${a.id==='formulas'?'lab':''}" data-id="${a.id}" href="${inClaude?a.claude:a.href}" ${inClaude?'target="_blank" rel="noopener"':''}>
